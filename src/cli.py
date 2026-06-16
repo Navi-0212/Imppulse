@@ -55,6 +55,21 @@ class FileLock:
         try:
             with open(self.lock_file, "r") as f:
                 pid = int(f.read().strip())
+            
+            # If the PID inside is our own PID, it means this is a stale lock from a previous
+            # container run (since our current running instance hasn't acquired it yet).
+            if pid == os.getpid():
+                try:
+                    os.remove(self.lock_file)
+                except OSError:
+                    pass
+                # Re-acquire
+                fd = os.open(self.lock_file, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+                with os.fdopen(fd, 'w') as f:
+                    f.write(str(os.getpid()))
+                self.is_acquired = True
+                return
+
             # Check if process is still running
             os.kill(pid, 0)
             raise FileLockError(f"Another pipeline execution is already running (PID: {pid}).")

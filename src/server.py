@@ -16,6 +16,15 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("impullse-server")
 
+# Clean stale lock file on server startup to prevent Docker container PID 1 reuse locking issues
+lock_file = os.path.join("logs", "impullse.lock")
+if os.path.exists(lock_file):
+    try:
+        os.remove(lock_file)
+        logger.info("Cleaned stale lock file on server startup.")
+    except Exception as e:
+        logger.warning(f"Could not clean stale lock file on startup: {str(e)}")
+
 app = FastAPI(
     title="Impullse Analytics Backend",
     description="FastAPI backend exposing endpoints for triggering customer sentiment analysis pipeline and viewing report statuses.",

@@ -444,7 +444,7 @@ def test_execution_lock():
     # 1. Acquire lock manually to mock another running process
     os.makedirs(os.path.dirname(lock_file), exist_ok=True)
     with open(lock_file, "w") as f:
-        f.write(str(os.getpid()))
+        f.write(str(os.getppid()))
         
     try:
         # 2. Run CLI command - should abort early due to file lock
