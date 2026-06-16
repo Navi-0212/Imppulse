@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Impullse — Weekly Product Review Pulse Dashboard</title>
+  <meta name="description" content="Manage and monitor customer sentiment reviews, clustering models, and Google Workspace delivery updates for Fintech products.">
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" aria-label="Main Navigation">
+      <div class="brand">
+        <div class="brand-logo">🟢</div>
+        <div class="brand-text">
+          <h1>Impullse</h1>
+          <span class="sub-text">Sentiment Engine</span>
+        </div>
+      </div>
+      
+      <nav class="nav-menu" aria-label="Sidebar Menu">
+        <button id="nav-btn-dashboard" class="nav-item active" aria-current="page">
+          <span class="nav-icon">📊</span> Dashboard
+        </button>
+        <button id="nav-btn-clusters" class="nav-item">
+          <span class="nav-icon">🧩</span> Sentiment Clusters
+        </button>
+        <button id="nav-btn-reviews" class="nav-item">
+          <span class="nav-icon">💬</span> Review Explorer
+        </button>
+        <button id="nav-btn-logs" class="nav-item">
+          <span class="nav-icon">📜</span> Audit Logs
+        </button>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="env-info">
+          <div class="env-title">WORKSPACE CONFIG</div>
+          <div class="env-item">Doc: <span id="sidebar-doc-id" class="truncate">Loading...</span></div>
+          <div class="env-item">MCP: <span id="sidebar-mcp-url" class="truncate">Loading...</span></div>
+        </div>
+      </div>
+    </aside>
+    
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- Top Header -->
+      <header class="main-header">
+        <div class="header-left">
+          <h2 id="page-title">Dashboard Overview</h2>
+          <p id="page-subtitle" class="text-muted">High-level statistics and recent review ingestion runs.</p>
+        </div>
+        <div class="header-right">
+          <div id="status-badge" class="badge badge-idle">
+            <span class="status-indicator"></span> Idle
+          </div>
+          <button id="btn-trigger-run-modal" class="btn btn-primary">
+            🚀 Run Analysis Pipeline
+          </button>
+        </div>
+      </header>
+      
+      <!-- Top Metrics Cards -->
+      <section class="metrics-grid" aria-label="Core Metrics">
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Reviews Ingested</span>
+            <span class="metric-icon text-muted">📥</span>
+          </div>
+          <div id="metric-total-reviews" class="metric-value">0</div>
+          <p id="metric-reviews-subtext" class="metric-subtext">Last run window</p>
+        </div>
+        
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Semantic Clusters</span>
+            <span class="metric-icon text-muted">🧩</span>
+          </div>
+          <div id="metric-total-clusters" class="metric-value">0</div>
+          <p id="metric-clusters-subtext" class="metric-subtext">Active user pain points</p>
+        </div>
+        
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Noise Discarded</span>
+            <span class="metric-icon text-muted">🗑️</span>
+          </div>
+          <div id="metric-noise-reviews" class="metric-value">0</div>
+          <p id="metric-noise-subtext" class="metric-subtext">Outlier review comments</p>
+        </div>
+        
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">GQV Compliance</span>
+            <span class="metric-icon text-muted">🛡️</span>
+          </div>
+          <div id="metric-gqv-status" class="metric-value">100%</div>
+          <p id="metric-gqv-subtext" class="metric-subtext">Quote grounding passes</p>
+        </div>
+      </section>
+      
+      <!-- Dynamic Views Container -->
+      <section class="content-body" aria-label="Active Tab Content">
+        
+        <!-- 1. Dashboard Tab -->
+        <div id="view-dashboard" class="tab-view active">
+          <div class="dashboard-layout">
+            <div class="card main-info-card">
+              <h3>Groww Weekly Pulse System</h3>
+              <p>Welcome to the Impullse sentiment intelligence dashboard. The pipeline crawls reviews from the Apple App Store and Google Play Store, filters out short spam, anonymizes PII details, and clusters them using sentence transformer embeddings to separate noise from actionable feedback.</p>
+              
+              <div class="features-list">
+                <div class="feature-item">
+                  <div class="feature-icon">✨</div>
+                  <div class="feature-text">
+                    <h4>PII Scrubbing Gate</h4>
+                    <p>Uses Microsoft Presidio and robust Regex fallbacks to scrub account references, emails, and phone numbers before analysis.</p>
+                  </div>
+                </div>
+                
+                <div class="feature-item">
+                  <div class="feature-icon">🔍</div>
+                  <div class="feature-text">
+                    <h4>Grounded Quote Verification</h4>
+                    <p>Enforces zero AI hallucinations. Every quote in the weekly document is checked character-for-character against source reviews.</p>
+                  </div>
+                </div>
+                
+                <div class="feature-item">
+                  <div class="feature-icon">✉️</div>
+                  <div class="feature-text">
+                    <h4>Workspace MCP Integration</h4>
+                    <p>Automatically appends reports to Google Docs with formatting and schedules email teaser notifications for stakeholders.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card status-summary-card">
+              <h3>System Health & Operations</h3>
+              <div class="status-list">
+                <div class="status-row">
+                  <span>Daily API Token Budget</span>
+                  <strong id="dashboard-token-budget">0 / 70,000</strong>
+                </div>
+                <div class="status-row">
+                  <span>Last Executed Run</span>
+                  <strong id="dashboard-last-run">Never</strong>
+                </div>
+                <div class="status-row">
+                  <span>Last Run Status</span>
+                  <strong id="dashboard-last-status">None</strong>
+                </div>
+                <div class="status-row">
+                  <span>CORS/API Status</span>
+                  <strong id="dashboard-api-connection" class="text-error">Offline</strong>
+                </div>
+              </div>
+              
+              <div class="recent-run-quick">
+                <h4>Active Configuration</h4>
+                <div class="config-log-item">
+                  <span>Google Doc ID:</span>
+                  <code id="config-doc-id">Not loaded</code>
+                </div>
+                <div class="config-log-item">
+                  <span>MCP Base URL:</span>
+                  <code id="config-mcp-url">Not loaded</code>
+                </div>
+                <div class="config-log-item">
+                  <span>Default Recipients:</span>
+                  <code id="config-default-recipients">Not loaded</code>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 2. Clusters Tab -->
+        <div id="view-clusters" class="tab-view">
+          <div class="clusters-container">
+            <div class="card">
+              <div class="card-header-actions">
+                <h3>Semantic Sentiment Themes</h3>
+                <span id="clusters-run-week" class="badge">ISO Week</span>
+              </div>
+              <p class="text-muted">Clustered topics generated during the last run. Outlier noise reviews have been discarded.</p>
+              
+              <div id="clusters-accordion-list" class="accordion-list">
+                <!-- Dynamically populated accordions go here -->
+                <div class="empty-state">
+                  <p>No clusters loaded. Please trigger a pipeline run to process data.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 3. Review Explorer Tab -->
+        <div id="view-reviews" class="tab-view">
+          <div class="reviews-container">
+            <div class="card filters-card">
+              <div class="search-filters">
+                <input type="text" id="review-search-input" placeholder="Search reviews text or authors...">
+                
+                <select id="filter-platform">
+                  <option value="all">All Platforms</option>
+                  <option value="android">Google Play (Android)</option>
+                  <option value="ios">App Store (iOS)</option>
+                </select>
+                
+                <select id="filter-rating">
+                  <option value="all">All Ratings</option>
+                  <option value="5">★ 5 Stars</option>
+                  <option value="4">★ 4 Stars</option>
+                  <option value="3">★ 3 Stars</option>
+                  <option value="2">★ 2 Stars</option>
+                  <option value="1">★ 1 Star</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="card reviews-list-card">
+              <div class="card-header-actions">
+                <h3>Ingested & Scrubbed Reviews</h3>
+                <span id="reviews-count-badge" class="badge">0 Total</span>
+              </div>
+              
+              <div class="reviews-table-container">
+                <table id="reviews-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 10%;">Platform</th>
+                      <th style="width: 10%;">Rating</th>
+                      <th style="width: 15%;">Author</th>
+                      <th style="width: 50%;">Review Text</th>
+                      <th style="width: 15%;">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody id="reviews-table-body">
+                    <!-- Dynamically populated rows go here -->
+                    <tr>
+                      <td colspan="5" class="text-center text-muted">No reviews loaded. Trigger the pipeline first.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 4. Audit Logs Tab -->
+        <div id="view-logs" class="tab-view">
+          <div class="logs-container">
+            <div class="card">
+              <h3>Execution Audit History</h3>
+              <p class="text-muted">Auditable execution history run logs stored on the server.</p>
+              
+              <div class="logs-table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Timestamp</th>
+                      <th>Product</th>
+                      <th>ISO Week</th>
+                      <th>Ingested</th>
+                      <th>Clusters</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="logs-table-body">
+                    <!-- Dynamically populated run logs go here -->
+                    <tr>
+                      <td colspan="7" class="text-center text-muted">No audit logs found on the server.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+      </section>
+    </main>
+  </div>
+  
+  <!-- Trigger Pipeline Run Modal Overlay -->
+  <div id="modal-run-pipeline" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-title">Trigger Weekly Review Pulse</h3>
+        <button id="btn-close-modal" class="modal-close-btn">&times;</button>
+      </div>
+      
+      <form id="form-run-pipeline">
+        <div class="form-group">
+          <label for="input-product">Product Identifier</label>
+          <input type="text" id="input-product" value="groww" required>
+          <span class="help-text">Target fintech application identifier (e.g. groww).</span>
+        </div>
+        
+        <div class="form-group">
+          <label for="input-window">Rolling Window (Weeks)</label>
+          <input type="number" id="input-window" value="12" min="1" max="52" required>
+          <span class="help-text">Review cutoff boundaries in weeks.</span>
+        </div>
+        
+        <div class="form-group inline-group">
+          <input type="checkbox" id="input-dry-run">
+          <label for="input-dry-run">Enable Dry-Run Mode</label>
+        </div>
+        <span class="help-text help-offset">Runs NLP analytics and Grounded Validation without pushing to Google Workspace.</span>
+        
+        <div class="form-group" id="recipients-group">
+          <label for="input-recipients">Stakeholder Email Recipients</label>
+          <input type="text" id="input-recipients" placeholder="emails@company.com, leadership@company.com">
+          <span class="help-text">Comma-separated email addresses for Weekly Gmail Teasers (leave blank for default).</span>
+        </div>
+        
+        <div id="modal-run-error" class="error-banner" style="display: none;"></div>
+        
+        <div class="modal-footer">
+          <button type="button" id="btn-cancel-modal" class="btn btn-secondary">Cancel</button>
+          <button type="submit" id="btn-submit-run" class="btn btn-primary">Start Execution</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Run Progress Log Console Drawer -->
+  <div id="run-progress-drawer" class="progress-drawer" style="display: none;">
+    <div class="drawer-header">
+      <h4>Pipeline Execution Running...</h4>
+      <span class="spinner"></span>
+    </div>
+    <div class="drawer-body">
+      <p>Pipeline is currently executing. reviews are being crawled, PII redacted, clustered, and summaries validated against Grounded Quote rules.</p>
+      <div class="progress-steps">
+        <div id="step-ingestion" class="step">🟢 Ingesting & Filtering Reviews</div>
+        <div id="step-clustering" class="step">🟢 Running Semantic Embeddings & HDBSCAN</div>
+        <div id="step-validation" class="step">🟢 LLM Summarization & Grounded Quote Check</div>
+        <div id="step-delivery" class="step">🟢 Workspace MCP Dispatch</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Run Detail Modal Overlay -->
+  <div id="modal-run-detail" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+    <div class="modal-card modal-large">
+      <div class="modal-header">
+        <h3 id="detail-title">Run Log Details</h3>
+        <button id="btn-close-detail" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-grid">
+          <div>
+            <strong>ISO Week:</strong> <span id="detail-week">-</span>
+          </div>
+          <div>
+            <strong>Timestamp:</strong> <span id="detail-time">-</span>
+          </div>
+          <div>
+            <strong>Ingested:</strong> <span id="detail-ingested">-</span>
+          </div>
+          <div>
+            <strong>Status:</strong> <span id="detail-status">-</span>
+          </div>
+        </div>
+        
+        <div class="detail-section">
+          <h4>Generated Sentiment Themes</h4>
+          <div id="detail-themes-list" class="detail-themes-list">
+            <!-- Dynamically populated detail themes -->
+          </div>
+        </div>
+        
+        <div class="detail-section">
+          <h4>Full JSON Log</h4>
+          <pre><code id="detail-json-block"></code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
