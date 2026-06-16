@@ -1,0 +1,7 @@
+{
+  "name": "docs-mcp",
+  "version": "1.0.0",
+  "description": "Custom Google Docs MCP Server",
+  "main": "index.js",
+  "dependencies": {}
+}
