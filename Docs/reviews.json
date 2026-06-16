@@ -1,0 +1,20 @@
+[
+  {
+    "id": "ios_1",
+    "author": "User One",
+    "title": "Need help",
+    "text": "The app is freezing at market open 9:15 AM IST. Lag is too high.",
+    "rating": 1,
+    "date": "2026-06-16T12:00:00Z",
+    "platform": "ios"
+  },
+  {
+    "id": "gp_1",
+    "author": "User Two",
+    "title": "",
+    "text": "Worst support. Chatbot does not resolve the ticket at all.",
+    "rating": 2,
+    "date": "2026-06-16T12:00:00Z",
+    "platform": "android"
+  }
+]
