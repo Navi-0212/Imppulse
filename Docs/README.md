@@ -17,13 +17,13 @@ The application is structured into four distinct modular tiers, separating inges
 
 ```mermaid
 flowchart TD
-    subgraph Ingestion Tier
+    subgraph "Ingestion Tier"
         A1[Apple App Store iTunes RSS] -->|XML feedparser| Ingestion[Ingestion Coordinator]
         A2[Google Play Store Product Page] -->|Playwright Scraper / Mock Fallback| Ingestion
         Ingestion -->|Text Filtering & Presidio NER| Prep[PII-Scrubbed JSON Chunks]
     end
 
-    subgraph Analytics & Clustering Tier
+    subgraph "Analytics & Clustering Tier"
         Prep -->|SentenceTransformers| Vectors[Dense Review Embeddings]
         Vectors -->|UMAP| Dim[2D Projective Space]
         Dim -->|HDBSCAN| Clusters[Review Sentiment Clusters]
@@ -34,14 +34,14 @@ flowchart TD
         Validator -- Pass --> FinalReport[Compliance-Grounded Report Payload]
     end
 
-    subgraph Orchestration & Idempotency Tier
+    subgraph "Orchestration & Idempotency Tier"
         FinalReport --> Orchestrator[Orchestration Engine / CLI]
         Orchestrator -->|Read run log| Idempotency{Is Week/Product Already Processed?}
         Idempotency -- Yes: Update Mode --> Delivery[MCP Client Routing]
         Idempotency -- No: Append Mode --> Delivery
     end
 
-    subgraph Google Workspace Integration (Railway)
+    subgraph "Google Workspace Integration (Railway)"
         Delivery -->|HTTP POST /append_to_doc| DocsTool[Google Docs Tool]
         Delivery -->|HTTP POST /create_email_draft| GmailTool[Gmail Tool]
         DocsTool -->|Docs API| Doc[Running Google Doc: Weekly Review Pulse - Groww]
