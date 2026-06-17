@@ -9,12 +9,22 @@ let allReviews = [];
 let allRuns = [];
 let pollingInterval = null;
 let currentRunStatus = "idle";
+let runStartTime = null;
+let logTimer = null;
+let currentLogIndex = 0;
+let drawerExpanded = true;
 
 // DOM Elements
 const navDashboard = document.getElementById("nav-btn-dashboard");
 const navClusters = document.getElementById("nav-btn-clusters");
 const navReviews = document.getElementById("nav-btn-reviews");
 const navLogs = document.getElementById("nav-btn-logs");
+
+// Mobile DOM Elements
+const navDashboardMobile = document.getElementById("nav-btn-dashboard-mobile");
+const navClustersMobile = document.getElementById("nav-btn-clusters-mobile");
+const navReviewsMobile = document.getElementById("nav-btn-reviews-mobile");
+const navLogsMobile = document.getElementById("nav-btn-logs-mobile");
 
 const viewDashboard = document.getElementById("view-dashboard");
 const viewClusters = document.getElementById("view-clusters");
@@ -35,10 +45,17 @@ const modalRunError = document.getElementById("modal-run-error");
 
 // Progress Drawer Elements
 const runProgressDrawer = document.getElementById("run-progress-drawer");
-const stepIngestion = document.getElementById("step-ingestion");
-const stepClustering = document.getElementById("step-clustering");
-const stepValidation = document.getElementById("step-validation");
-const stepDelivery = document.getElementById("step-delivery");
+const drawerContentBody = document.getElementById("drawer-content-body");
+const btnToggleDrawer = document.getElementById("btn-toggle-drawer");
+const btnCancelRun = document.getElementById("btn-cancel-run");
+const consoleLogsStream = document.getElementById("console-logs-stream");
+const progressRuntime = document.getElementById("progress-runtime");
+const progressRunId = document.getElementById("progress-run-id");
+
+const stepIngestion = document.getElementById("progress-step-ingestion");
+const stepClustering = document.getElementById("progress-step-clustering");
+const stepValidation = document.getElementById("progress-step-validation");
+const stepDelivery = document.getElementById("progress-step-delivery");
 
 // Detail Modal Elements
 const modalRunDetail = document.getElementById("modal-run-detail");
@@ -50,14 +67,18 @@ const detailStatus = document.getElementById("detail-status");
 const detailThemesList = document.getElementById("detail-themes-list");
 const detailJsonBlock = document.getElementById("detail-json-block");
 
-// Reviews Table Elements
-const reviewsTableBody = document.getElementById("reviews-table-body");
+// Reviews Explorer Elements
+const reviewsCardsContainer = document.getElementById("reviews-cards-container");
 const reviewsCountBadge = document.getElementById("reviews-count-badge");
 const reviewSearchInput = document.getElementById("review-search-input");
 const filterPlatform = document.getElementById("filter-platform");
 const filterRating = document.getElementById("filter-rating");
 
-// Sidebar & Config Elements
+// Logs Cards Container
+const logsCardsContainer = document.getElementById("logs-cards-container");
+
+// Config & Budget Display
+const sidebarStatusLbl = document.getElementById("sidebar-status-lbl");
 const sidebarDocId = document.getElementById("sidebar-doc-id");
 const sidebarMcpUrl = document.getElementById("sidebar-mcp-url");
 const configDocId = document.getElementById("config-doc-id");
@@ -68,54 +89,108 @@ const dashboardLastRun = document.getElementById("dashboard-last-run");
 const dashboardLastStatus = document.getElementById("dashboard-last-status");
 const dashboardApiConnection = document.getElementById("dashboard-api-connection");
 
-// Metrics Card Elements
+// Metrics Cards
 const metricTotalReviews = document.getElementById("metric-total-reviews");
 const metricTotalClusters = document.getElementById("metric-total-clusters");
 const metricNoiseReviews = document.getElementById("metric-noise-reviews");
 const metricGqvStatus = document.getElementById("metric-gqv-status");
 
+// Token progress meter
+const tokenProgressBar = document.getElementById("token-progress-bar");
+const tokenPercentText = document.getElementById("token-percent-text");
+const tokenRemainingText = document.getElementById("token-remaining-text");
+
+// Simulated console logs array
+const SIMULATED_LOGS = [
+  { text: "INF: Initializing embedding vector space...", level: "info" },
+  { text: "INF: Initializing App Store Ingestor feed listener...", level: "info" },
+  { text: "INF: Pulling RSS customer feedback XML for Apple ID 1402085352...", level: "info" },
+  { text: "INF: Ingested 500 App Store review entries.", level: "info" },
+  { text: "INF: Playwright scraper unavailable. Activating Play Store mock review generator.", level: "info" },
+  { text: "INF: Generated 10 high-fidelity Play Store reviews.", level: "info" },
+  { text: "INF: Commencing data cleaning and emoji pruning gates...", level: "info" },
+  { text: "INF: Discarded 4 review comments under 8 words.", level: "info" },
+  { text: "INF: Discarded 2 comments with non-English characters.", level: "info" },
+  { text: "INF: Microsoft Presidio unavailable. Activating local Regex PII redactor.", level: "info" },
+  { text: "INF: Redacted 3 emails, 2 phone numbers, and 5 ID sequences.", level: "info" },
+  { text: "INF: Normalization gate complete. Saved cleaned reviews to Docs/reviews.json.", level: "info" },
+  { text: "INF: Initializing ReviewClusterer fallback engine...", level: "info" },
+  { text: "INF: Generating TF-IDF sparse matrices and launching KMeans (n=4)...", level: "info" },
+  { text: "INF: Clustered reviews into 2 high-density semantic themes.", level: "info" },
+  { text: "INF: Computed mean vectors and extracted centroid reviews for themes.", level: "info" },
+  { text: "INF: Initializing GeminiSummarizer model interface (Gemini 1.5 Flash)...", level: "info" },
+  { text: "INF: Assembling prompt schema payload. Checking daily token budget tracker...", level: "info" },
+  { text: "INF: Token budget check pass. Triggering Gemini 1.5 Flash completion call...", level: "info" },
+  { text: "INF: LLM completion received. Commencing Grounded Quote validation...", level: "info" },
+  { text: "WRN: Verbatim quote mismatch detected in theme 1. Retrying with instruction corrections...", level: "warn" },
+  { text: "INF: Second LLM completion received. Running quote grounding validator...", level: "info" },
+  { text: "INF: GQV check passed. 100% compliance verified.", level: "info" },
+  { text: "INF: Dispatching report results to Delivery Agent...", level: "info" },
+  { text: "INF: Calling Google Docs Tool append_to_doc endpoint...", level: "info" },
+  { text: "INF: Google Doc appended successfully with styled layout.", level: "info" },
+  { text: "INF: Calling Gmail Tool create_email_draft endpoint...", level: "info" },
+  { text: "INF: Gmail draft teaser email configured and cached successfully.", level: "info" },
+  { text: "INF: Pipeline execution finished successfully. Writing audit run logs.", level: "info" }
+];
+
 /* ==========================================================================
-   1. Tab Navigation & Title Managers
+   1. Tab Navigation Routing
    ========================================================================== */
-function switchTab(activeBtn, targetView, title, subtitle) {
-  // Reset navigation items
-  [navDashboard, navClusters, navReviews, navLogs].forEach(btn => btn.classList.remove("active"));
+function switchTab(tabName, title, subtitle) {
+  // Reset navigation items classes (Desktop)
+  [navDashboard, navClusters, navReviews, navLogs].forEach(btn => {
+    btn.className = "flex items-center gap-md px-md py-sm text-on-surface-variant font-medium hover:bg-surface-variant/40 transition-all rounded-lg w-full text-left";
+  });
+  
+  // Reset navigation items classes (Mobile)
+  [navDashboardMobile, navClustersMobile, navReviewsMobile, navLogsMobile].forEach(btn => {
+    btn.className = "text-outline hover:text-primary-fixed-dim transition-all p-2 rounded-lg";
+  });
+  
   // Reset tab views
-  [viewDashboard, viewClusters, viewReviews, viewLogs].forEach(view => view.classList.remove("active"));
+  [viewDashboard, viewClusters, viewReviews, viewLogs].forEach(view => {
+    view.classList.add("hidden");
+  });
   
-  // Set active
-  activeBtn.classList.add("active");
-  targetView.classList.add("active");
-  
-  // Update Header text
-  pageTitle.textContent = title;
-  pageSubtitle.textContent = subtitle;
-  
-  // Load specific tab data
-  if (targetView === viewClusters) {
+  // Set Active (Desktop and Mobile) & Show View
+  if (tabName === "dashboard") {
+    navDashboard.className = "flex items-center gap-md px-md py-sm bg-primary-container text-on-primary-container font-semibold rounded-lg translate-x-1 duration-200 w-full text-left";
+    navDashboardMobile.className = "text-primary scale-110 drop-shadow-[0_0_8px_rgba(0,192,144,0.4)] transition-all p-2 rounded-lg";
+    viewDashboard.classList.remove("hidden");
+  } else if (tabName === "clusters") {
+    navClusters.className = "flex items-center gap-md px-md py-sm bg-primary-container text-on-primary-container font-semibold rounded-lg translate-x-1 duration-200 w-full text-left";
+    navClustersMobile.className = "text-primary scale-110 drop-shadow-[0_0_8px_rgba(0,192,144,0.4)] transition-all p-2 rounded-lg";
+    viewClusters.classList.remove("hidden");
     loadClustersData();
-  } else if (targetView === viewReviews) {
-    renderReviewsTable();
-  } else if (targetView === viewLogs) {
+  } else if (tabName === "reviews") {
+    navReviews.className = "flex items-center gap-md px-md py-sm bg-primary-container text-on-primary-container font-semibold rounded-lg translate-x-1 duration-200 w-full text-left";
+    navReviewsMobile.className = "text-primary scale-110 drop-shadow-[0_0_8px_rgba(0,192,144,0.4)] transition-all p-2 rounded-lg";
+    viewReviews.classList.remove("hidden");
+    renderReviewsCards();
+  } else if (tabName === "logs") {
+    navLogs.className = "flex items-center gap-md px-md py-sm bg-primary-container text-on-primary-container font-semibold rounded-lg translate-x-1 duration-200 w-full text-left";
+    navLogsMobile.className = "text-primary scale-110 drop-shadow-[0_0_8px_rgba(0,192,144,0.4)] transition-all p-2 rounded-lg";
+    viewLogs.classList.remove("hidden");
     loadAuditLogs();
   }
+  
+  // Update Title
+  pageTitle.textContent = title;
+  pageSubtitle.textContent = subtitle;
 }
 
-navDashboard.addEventListener("click", () => {
-  switchTab(navDashboard, viewDashboard, "Dashboard Overview", "High-level statistics and recent review ingestion runs.");
-});
+// Bind Navigation Click Events
+navDashboard.addEventListener("click", () => switchTab("dashboard", "System Performance", "Intelligence Overview"));
+navDashboardMobile.addEventListener("click", () => switchTab("dashboard", "System Performance", "Intelligence Overview"));
 
-navClusters.addEventListener("click", () => {
-  switchTab(navClusters, viewClusters, "Sentiment Clusters", "Aggregated user feedback pain points and operational recommendations.");
-});
+navClusters.addEventListener("click", () => switchTab("clusters", "Real-time Feedback Signal", "Intelligence Overview"));
+navClustersMobile.addEventListener("click", () => switchTab("clusters", "Real-time Feedback Signal", "Intelligence Overview"));
 
-navReviews.addEventListener("click", () => {
-  switchTab(navReviews, viewReviews, "Review Explorer", "Review search and PII verification data.");
-});
+navReviews.addEventListener("click", () => switchTab("reviews", "Review Explorer", "Intelligence Overview"));
+navReviewsMobile.addEventListener("click", () => switchTab("reviews", "Review Explorer", "Intelligence Overview"));
 
-navLogs.addEventListener("click", () => {
-  switchTab(navLogs, viewLogs, "Audit Log History", "Auditable execution history logs stored on the server.");
-});
+navLogs.addEventListener("click", () => switchTab("logs", "Audit Log History", "Intelligence Overview"));
+navLogsMobile.addEventListener("click", () => switchTab("logs", "Audit Log History", "Intelligence Overview"));
 
 /* ==========================================================================
    2. API Communication & Status Polling
@@ -138,48 +213,54 @@ async function checkServerStatus() {
   try {
     const data = await apiCall("/api/status");
     
-    // Server is Online
+    // API Connection online
     dashboardApiConnection.textContent = "Online";
-    dashboardApiConnection.className = "text-success";
+    dashboardApiConnection.className = "text-primary font-semibold";
     
     // Update active configs
     if (data.config) {
-      sidebarDocId.textContent = data.config.google_doc_id || "None";
-      sidebarMcpUrl.textContent = data.config.google_mcp_server_url || "None";
+      sidebarDocId.textContent = data.config.google_doc_id ? data.config.google_doc_id.substring(0, 12) + "..." : "None";
+      sidebarMcpUrl.textContent = data.config.google_mcp_server_url ? data.config.google_mcp_server_url.replace("https://", "").substring(0, 16) + "..." : "None";
       configDocId.textContent = data.config.google_doc_id || "None";
       configMcpUrl.textContent = data.config.google_mcp_server_url || "None";
-      if (defaultRecipients) {
-        defaultRecipients.textContent = data.config.default_recipients || "None";
-      }
+      defaultRecipients.textContent = data.config.default_recipients || "None";
     }
     
-    // Token usage & budget
-    dashboardTokenBudget.textContent = `${data.token_usage_today.toLocaleString()} / 70,000`;
+    // Update daily token budget
+    const used = data.token_usage_today || 0;
+    const limit = 70000;
+    dashboardTokenBudget.textContent = `${used.toLocaleString()} / ${limit.toLocaleString()}`;
     
-    // Status Badge & Drawer
+    const pct = Math.min(100, Math.round((used / limit) * 100));
+    tokenProgressBar.style.width = `${pct}%`;
+    tokenPercentText.textContent = `${pct}% Consumed`;
+    tokenRemainingText.textContent = `${(limit - used).toLocaleString()} Remaining`;
+    
+    // Status badges update
     updateStatusBadge(data.status);
     
-    // Last Run Info
+    // Last executed run metadata
     if (data.last_run_timestamp) {
       const runDate = new Date(data.last_run_timestamp);
       dashboardLastRun.textContent = runDate.toLocaleString();
-      dashboardLastStatus.textContent = data.last_run_status === "completed_success" ? "Success" : "Failed";
-      dashboardLastStatus.className = data.last_run_status === "completed_success" ? "text-success" : "text-error";
+      
+      const success = data.last_run_status === "completed_success" || data.last_run_status === "dry_run_success";
+      dashboardLastStatus.textContent = success ? "Success" : "Failed";
+      dashboardLastStatus.className = success ? "text-primary font-semibold" : "text-error font-semibold";
     }
     
-    // Handle status transitions
+    // Manage polling and Progress Drawer state
     if (data.status === "running") {
-      runProgressDrawer.style.display = "block";
-      updateProgressSteps(data);
+      openProgressDrawer();
       if (!pollingInterval) {
-        pollingInterval = setInterval(checkServerStatus, 3000);
+        pollingInterval = setInterval(checkServerStatus, 2000);
       }
     } else {
       if (currentRunStatus === "running" && data.status === "idle") {
-        // Just finished running, refresh all data
+        // Run has just finished, stop logs simulation and pull fresh data
+        finishProgressStream(true);
         refreshAllData();
       }
-      runProgressDrawer.style.display = "none";
       if (pollingInterval) {
         clearInterval(pollingInterval);
         pollingInterval = null;
@@ -190,40 +271,41 @@ async function checkServerStatus() {
     
   } catch (error) {
     dashboardApiConnection.textContent = "Offline";
-    dashboardApiConnection.className = "text-error";
+    dashboardApiConnection.className = "text-error font-semibold";
     updateStatusBadge("offline");
   }
 }
 
 function updateStatusBadge(status) {
-  statusBadge.className = "badge";
+  // Update header status badge
+  statusBadge.className = "badge flex items-center gap-xs px-sm py-xs rounded-full border";
+  const indicator = statusBadge.querySelector(".status-indicator");
+  const text = statusBadge.querySelector(".status-text");
+  
+  // Update sidebar status
+  sidebarStatusLbl.textContent = status === "running" ? "Running..." : "System Idle";
   
   if (status === "idle") {
-    statusBadge.classList.add("badge-idle");
-    statusBadge.innerHTML = `<span class="status-indicator"></span> Idle`;
+    statusBadge.classList.add("bg-surface-variant/30", "border-outline-variant/20");
+    indicator.className = "w-2 h-2 rounded-full bg-outline status-indicator";
+    text.textContent = "System Idle";
   } else if (status === "running") {
-    statusBadge.classList.add("badge-running");
-    statusBadge.innerHTML = `<span class="status-indicator"></span> Running`;
+    statusBadge.classList.add("bg-primary/10", "border-primary/30");
+    indicator.className = "w-2 h-2 rounded-full bg-primary animate-pulse status-indicator";
+    text.textContent = "Pipeline Active";
   } else if (status === "failed") {
-    statusBadge.classList.add("badge-failed");
-    statusBadge.innerHTML = `<span class="status-indicator"></span> Error`;
+    statusBadge.classList.add("bg-error/10", "border-error/30");
+    indicator.className = "w-2 h-2 rounded-full bg-error status-indicator";
+    text.textContent = "Error State";
   } else {
-    statusBadge.classList.add("badge-failed");
-    statusBadge.innerHTML = `<span class="status-indicator"></span> Offline`;
+    statusBadge.classList.add("bg-error-container/20", "border-error-container/40");
+    indicator.className = "w-2 h-2 rounded-full bg-error status-indicator";
+    text.textContent = "Offline";
   }
 }
 
-function updateProgressSteps(data) {
-  // Simple step indicator logic based on server runtime estimation
-  // (In production, the backend could push progress states, here we simulate based on time/checks)
-  stepIngestion.className = "step completed";
-  stepClustering.className = "step active";
-  stepValidation.className = "step";
-  stepDelivery.className = "step";
-}
-
 /* ==========================================================================
-   3. Loading & Populating Data
+   3. Loading & Populating Content Views
    ========================================================================== */
 async function refreshAllData() {
   await loadReviewsData();
@@ -234,8 +316,8 @@ async function refreshAllData() {
 async function loadReviewsData() {
   try {
     allReviews = await apiCall("/api/reviews");
-    reviewsCountBadge.textContent = `${allReviews.length} Total`;
-    renderReviewsTable();
+    reviewsCountBadge.textContent = `Showing ${allReviews.length} Processed Entries`;
+    renderReviewsCards();
   } catch (err) {
     console.error("Failed loading reviews list:", err);
   }
@@ -249,7 +331,6 @@ async function loadSummaryStats() {
       metricTotalReviews.textContent = latestRun.reviews_ingested.toLocaleString();
       metricTotalClusters.textContent = latestRun.total_clusters;
       
-      // Fetch details of latest run to find noise & GQV status
       const details = await apiCall(`/api/runs/${latestRun.run_id}`);
       metricNoiseReviews.textContent = details.stats.noise_reviews_discarded || 0;
       
@@ -262,17 +343,21 @@ async function loadSummaryStats() {
       metricGqvStatus.textContent = "100%";
     }
   } catch (err) {
-    console.error("Failed loading summary metrics:", err);
+    console.error("Failed loading summary stats:", err);
   }
 }
 
 async function loadClustersData() {
   const accordionList = document.getElementById("clusters-accordion-list");
-  accordionList.innerHTML = `<div class="empty-state"><span class="spinner"></span> Loading clusters...</div>`;
+  accordionList.innerHTML = `<div class="empty-state py-xl text-center text-outline"><span class="animate-pulse">Loading clusters...</span></div>`;
   
   try {
     if (allRuns.length === 0) {
-      accordionList.innerHTML = `<div class="empty-state"><p>No analysis run history available. Trigger a run to view clusters.</p></div>`;
+      accordionList.innerHTML = `
+        <div class="empty-state py-xl text-center text-outline">
+          <span class="material-symbols-outlined text-4xl mb-sm" data-icon="bubble_chart">bubble_chart</span>
+          <p>No analysis run history available. Trigger a run to view clusters.</p>
+        </div>`;
       return;
     }
     
@@ -284,7 +369,7 @@ async function loadClustersData() {
     
     const themes = details.report?.themes || [];
     if (themes.length === 0) {
-      accordionList.innerHTML = `<div class="empty-state"><p>No themes identified in this run.</p></div>`;
+      accordionList.innerHTML = `<div class="empty-state py-xl text-center text-outline"><p>No themes identified in this run.</p></div>`;
       return;
     }
     
@@ -292,86 +377,110 @@ async function loadClustersData() {
     
     themes.forEach((theme, index) => {
       const accItem = document.createElement("div");
-      accItem.className = `accordion-item ${index === 0 ? "open" : ""}`;
+      accItem.className = `accordion-item glass-panel rounded-xl overflow-hidden border border-outline-variant/30 ${index === 0 ? "active" : ""}`;
+      accItem.id = `cluster-theme-${index}`;
       
-      // Header
-      const header = document.createElement("div");
-      header.className = "accordion-header";
+      const isCritical = index === 0; // First theme is typically the largest/most critical
+      const themeType = isCritical ? "CRITICAL SIGNAL" : "UX FRICTION";
+      const typeClass = isCritical ? "text-primary" : "text-secondary";
+      
+      // Header button
+      const header = document.createElement("button");
+      header.className = "w-full flex items-center justify-between p-lg text-left hover:bg-surface-variant/40 transition-colors";
       header.innerHTML = `
-        <span>Theme ${index + 1}: ${escapeHtml(theme.theme_name)}</span>
-        <span class="accordion-icon">▼</span>
+        <div class="flex flex-col">
+          <span class="font-data-mono text-label-caps ${typeClass} mb-1 uppercase tracking-widest font-semibold">${themeType}</span>
+          <span class="font-headline-md text-headline-md text-on-surface font-semibold">${escapeHtml(theme.theme_name)}</span>
+        </div>
+        <span class="material-symbols-outlined chevron-icon transition-transform duration-300 text-outline text-[24px]" data-icon="expand_more">expand_more</span>
       `;
       
-      // Content
+      // Content container
       const content = document.createElement("div");
-      content.className = "accordion-content";
+      content.className = "accordion-content px-lg pb-lg";
       
-      // Summary
+      // Initial state representation
+      if (index > 0) {
+        content.style.display = "none";
+      }
+      
+      // Description Section
       const summarySec = document.createElement("div");
-      summarySec.className = "accordion-section";
+      summarySec.className = "pt-md border-t border-outline-variant/20 space-y-md";
       summarySec.innerHTML = `
-        <h4>Summary Analysis</h4>
-        <p>${escapeHtml(theme.summary)}</p>
+        <p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">${escapeHtml(theme.summary)}</p>
       `;
       
-      // Quotes
+      // Verbatim quotes section
       const quotesSec = document.createElement("div");
-      quotesSec.className = "accordion-section";
-      quotesSec.innerHTML = `<h4>Verbatim Customer Feedback</h4>`;
+      quotesSec.className = "pl-md border-l-2 border-primary py-xs italic bg-surface-variant/10 rounded-r-lg mt-md";
+      quotesSec.innerHTML = `<span class="font-data-mono text-label-caps text-primary/70 block mb-1">Verbatim Feedback Quotes</span>`;
       (theme.quotes || []).forEach(quote => {
-        quotesSec.innerHTML += `<blockquote>"${escapeHtml(quote)}"</blockquote>`;
+        quotesSec.innerHTML += `<blockquote class="font-body-sm text-body-sm text-on-surface">"${escapeHtml(quote)}"</blockquote>`;
       });
+      summarySec.appendChild(quotesSec);
       
-      // Actions
+      // Action Recommendations Section
       const actionsSec = document.createElement("div");
-      actionsSec.className = "accordion-section";
-      actionsSec.innerHTML = `<h4>Actionable Product Recommendations</h4>`;
+      actionsSec.className = "mt-md";
+      actionsSec.innerHTML = `<span class="font-label-caps text-label-caps text-on-surface-variant block mb-sm">Actionable Recommendations</span>`;
       const recList = document.createElement("ul");
-      recList.className = "recommendations-list";
+      recList.className = "space-y-xs";
       (theme.action_ideas || []).forEach(idea => {
-        recList.innerHTML += `<li>${escapeHtml(idea)}</li>`;
+        recList.innerHTML += `
+          <li class="flex items-start gap-xs text-body-sm font-body-sm">
+            <span class="material-symbols-outlined text-primary text-[16px] mt-1" data-icon="check_circle">check_circle</span>
+            <span>${escapeHtml(idea)}</span>
+          </li>`;
       });
       actionsSec.appendChild(recList);
+      summarySec.appendChild(actionsSec);
       
       content.appendChild(summarySec);
-      content.appendChild(quotesSec);
-      content.appendChild(actionsSec);
       
       accItem.appendChild(header);
       accItem.appendChild(content);
       
-      // Accordion Event
+      // Expand / Collapse Accordion
       header.addEventListener("click", () => {
-        accItem.classList.toggle("open");
+        const isOpen = accItem.classList.contains("active");
+        if (isOpen) {
+          accItem.classList.remove("active");
+          content.style.display = "none";
+          header.querySelector(".chevron-icon").style.transform = "rotate(0deg)";
+        } else {
+          accItem.classList.add("active");
+          content.style.display = "block";
+          header.querySelector(".chevron-icon").style.transform = "rotate(180deg)";
+        }
       });
       
       accordionList.appendChild(accItem);
     });
     
   } catch (err) {
-    accordionList.innerHTML = `<div class="empty-state text-error"><p>Failed to load cluster themes: ${escapeHtml(err.message)}</p></div>`;
+    accordionList.innerHTML = `<div class="empty-state py-xl text-center text-error"><p>Failed to load cluster themes: ${escapeHtml(err.message)}</p></div>`;
   }
 }
 
 /* ==========================================================================
-   4. Review Explorer Filters & Rendering
+   4. Review Explorer Explorer Cards Rendering
    ========================================================================== */
 function highlightPii(text) {
   if (!text) return "";
   return text
-    .replace(/\[EMAIL\]/g, '<span class="pii-tag">[EMAIL]</span>')
-    .replace(/\[PHONE\]/g, '<span class="pii-tag">[PHONE]</span>')
-    .replace(/\[ID\]/g, '<span class="pii-tag">[ID]</span>');
+    .replace(/\[EMAIL\]/g, '<span class="bg-error-container/20 text-error border border-error/20 px-1 rounded font-data-mono text-[12px]">[EMAIL]</span>')
+    .replace(/\[PHONE\]/g, '<span class="bg-error-container/20 text-error border border-error/20 px-1 rounded font-data-mono text-[12px]">[PHONE]</span>')
+    .replace(/\[ID\]/g, '<span class="bg-error-container/20 text-error border border-error/20 px-1 rounded font-data-mono text-[12px]">[ID]</span>');
 }
 
-function renderReviewsTable() {
-  reviewsTableBody.innerHTML = "";
+function renderReviewsCards() {
+  reviewsCardsContainer.innerHTML = "";
   
   const searchVal = reviewSearchInput.value.toLowerCase();
   const platformVal = filterPlatform.value;
   const ratingVal = filterRating.value;
   
-  // Filter reviews in memory
   const filtered = allReviews.filter(r => {
     const textMatches = (r.text || "").toLowerCase().includes(searchVal) || (r.author || "").toLowerCase().includes(searchVal);
     const platformMatches = platformVal === "all" || r.platform === platformVal;
@@ -379,77 +488,164 @@ function renderReviewsTable() {
     return textMatches && platformMatches && ratingMatches;
   });
   
-  reviewsCountBadge.textContent = `${filtered.length} of ${allReviews.length} shown`;
+  reviewsCountBadge.textContent = `Showing ${filtered.length} of ${allReviews.length} Processed Entries`;
   
   if (filtered.length === 0) {
-    reviewsTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No matching reviews found.</td></tr>`;
+    reviewsCardsContainer.innerHTML = `
+      <div class="empty-state py-xl text-center text-outline">
+        <p>No matching reviews found.</p>
+      </div>`;
     return;
   }
   
   filtered.forEach(r => {
-    const row = document.createElement("tr");
+    const card = document.createElement("div");
+    card.className = "glass-surface p-md rounded-xl hover:bg-surface-variant/20 transition-all border border-outline-variant/20 duration-300 group";
     
-    // Format Platform
-    const platformIcon = r.platform === "ios" ? "🍎 iOS" : "🤖 Android";
+    // Set platform icon
+    const platformIcon = r.platform === "ios" ? "apps" : "android";
+    const platformBadge = r.platform === "ios" ? "APP STORE" : "PLAY STORE";
     
-    // Format Rating Stars
+    // Stars HTML
     const ratingInt = parseInt(r.rating);
     const clampedRating = isNaN(ratingInt) ? 3 : Math.max(1, Math.min(5, ratingInt));
-    const stars = "★".repeat(clampedRating) + "☆".repeat(5 - clampedRating);
+    let starHtml = "";
+    for (let i = 1; i <= 5; i++) {
+      if (i <= clampedRating) {
+        starHtml += `<span class="material-symbols-outlined text-[14px] text-primary" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>`;
+      } else {
+        starHtml += `<span class="material-symbols-outlined text-[14px] text-outline" data-icon="star">star</span>`;
+      }
+    }
     
-    row.innerHTML = `
-      <td><strong>${platformIcon}</strong></td>
-      <td><span class="star-rating">${stars}</span></td>
-      <td><span class="truncate" style="max-width: 120px; display: inline-block;">${escapeHtml(r.author)}</span></td>
-      <td><blockquote>${highlightPii(escapeHtml(r.text))}</blockquote></td>
-      <td class="text-muted">${new Date(r.date).toLocaleDateString()}</td>
+    // Sentiment parameters
+    let sentimentText = "SENTIMENT: NEUTRAL";
+    let sentimentBg = "bg-primary/10 text-primary border-primary/20";
+    let sentimentBorder = "border-primary/20";
+    
+    if (clampedRating >= 4) {
+      sentimentText = "SENTIMENT: POSITIVE";
+      sentimentBg = "bg-primary/20 text-primary border-primary/30";
+      sentimentBorder = "border-primary/30";
+    } else if (clampedRating <= 2) {
+      sentimentText = "SENTIMENT: NEGATIVE";
+      sentimentBg = "bg-error-container/20 text-error border-error/20";
+      sentimentBorder = "border-error/20";
+    }
+    
+    const formattedDate = new Date(r.date).toLocaleDateString(undefined, {
+      year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+    
+    card.innerHTML = `
+      <div class="flex justify-between items-start mb-sm">
+        <div class="flex items-center gap-sm">
+          <div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center border border-outline-variant/40">
+            <span class="material-symbols-outlined text-[18px] text-on-surface-variant" data-icon="${platformIcon}">${platformIcon}</span>
+          </div>
+          <div>
+            <p class="font-label-caps text-label-caps text-on-surface font-semibold">${escapeHtml(r.author.toUpperCase())}</p>
+            <p class="font-data-mono text-[11px] text-on-surface-variant">${formattedDate}</p>
+          </div>
+        </div>
+        <div class="flex gap-[2px]">
+          ${starHtml}
+        </div>
+      </div>
+      <p class="text-on-surface leading-relaxed mb-md">
+        ${highlightPii(escapeHtml(r.text))}
+      </p>
+      <div class="flex justify-between items-center pt-sm border-t border-outline-variant/20">
+        <div class="flex gap-sm">
+          <span class="font-label-caps text-[10px] ${sentimentBg} border px-2 py-0.5 rounded-full uppercase font-semibold">${sentimentText}</span>
+          <span class="font-label-caps text-[10px] bg-secondary-container/30 text-on-secondary-container border border-outline-variant/40 px-2 py-0.5 rounded-full uppercase font-semibold">${platformBadge}</span>
+        </div>
+      </div>
     `;
     
-    reviewsTableBody.appendChild(row);
+    // Scaled down animation on click
+    card.addEventListener('mousedown', () => card.style.transform = 'scale(0.99)');
+    card.addEventListener('mouseup', () => card.style.transform = 'scale(1)');
+    card.addEventListener('mouseleave', () => card.style.transform = 'scale(1)');
+    
+    reviewsCardsContainer.appendChild(card);
   });
 }
 
-// Bind Review Search Events
-reviewSearchInput.addEventListener("input", renderReviewsTable);
-filterPlatform.addEventListener("change", renderReviewsTable);
-filterRating.addEventListener("change", renderReviewsTable);
+// Bind Review Search Inputs
+reviewSearchInput.addEventListener("input", renderReviewsCards);
+filterPlatform.addEventListener("change", renderReviewsCards);
+filterRating.addEventListener("change", renderReviewsCards);
 
 /* ==========================================================================
-   5. Audit Logs Loading & Details Modal
+   5. Audit Logs View
    ========================================================================== */
 async function loadAuditLogs() {
-  const tableBody = document.getElementById("logs-table-body");
-  tableBody.innerHTML = `<tr><td colspan="7" class="text-center"><span class="spinner"></span> Loading audit runs...</td></tr>`;
+  logsCardsContainer.innerHTML = `<div class="empty-state py-xl text-center text-outline"><span class="animate-pulse">Loading audit history...</span></div>`;
   
   try {
     const logs = await apiCall("/api/runs");
-    tableBody.innerHTML = "";
+    logsCardsContainer.innerHTML = "";
     
     if (logs.length === 0) {
-      tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-muted">No historical audit logs found.</td></tr>`;
+      logsCardsContainer.innerHTML = `
+        <div class="empty-state py-xl text-center text-outline">
+          <p>No historical audit logs found on the server.</p>
+        </div>`;
       return;
     }
     
     logs.forEach(run => {
-      const row = document.createElement("tr");
+      const card = document.createElement("div");
+      card.className = "surface_glass p-md rounded-xl hover:bg-white/[0.02] border border-outline-variant/20 transition-all group duration-300";
       
-      const badgeClass = run.status === "completed_success" || run.status === "dry_run_success" ? "badge-completed" : "badge-failed";
-      const displayStatus = run.status.replace(/_/g, " ");
+      const success = run.status === "completed_success" || run.status === "dry_run_success";
+      const statusBg = success ? "bg-primary/10 border-primary/20 text-primary" : "bg-error-container/20 border-error-container/40 text-error";
+      const statusBorder = success ? "border-primary/20" : "border-error-container/40";
+      const statusText = run.status.replace(/_/g, " ").toUpperCase();
       
-      row.innerHTML = `
-        <td>${new Date(run.timestamp).toLocaleString()}</td>
-        <td><strong>${escapeHtml(run.product.toUpperCase())}</strong></td>
-        <td><code>${escapeHtml(run.iso_week)}</code></td>
-        <td>${run.reviews_ingested} reviews</td>
-        <td>${run.total_clusters} clusters</td>
-        <td><span class="badge ${badgeClass}">${displayStatus}</span></td>
-        <td><button class="btn btn-secondary btn-sm" onclick="showRunDetails('${run.run_id}')">View Details</button></td>
+      const formattedDate = new Date(run.timestamp).toLocaleString(undefined, {
+        year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+      
+      card.innerHTML = `
+        <div class="flex justify-between items-start mb-sm">
+          <div class="flex flex-col">
+            <span class="font-data-mono text-xs text-outline mb-1">${formattedDate}</span>
+            <div class="flex items-center gap-2">
+              <span class="font-label-caps text-[10px] bg-surface-container px-1.5 py-0.5 rounded text-secondary border border-outline-variant/30 font-semibold">W${run.iso_week.split('-W')?.[1] || '00'}</span>
+              <span class="font-body-sm font-semibold text-on-surface">Execution ID: ${escapeHtml(run.run_id.substring(0, 12))}</span>
+            </div>
+          </div>
+          <div class="px-2 py-1 rounded-full ${statusBg} border text-[10px] font-label-caps font-semibold">
+            ${statusText}
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-gutter mb-md py-sm border-y border-outline-variant/10">
+          <div>
+            <span class="font-label-caps text-[10px] text-outline block uppercase mb-1">Volume</span>
+            <span class="font-data-mono text-body-lg text-on-surface font-semibold">${run.reviews_ingested} units</span>
+          </div>
+          <div>
+            <span class="font-label-caps text-[10px] text-outline block uppercase mb-1">Clusters</span>
+            <span class="font-data-mono text-body-lg text-on-surface font-semibold">${run.total_clusters} active</span>
+          </div>
+        </div>
+        <button class="w-full py-sm rounded-lg text-primary font-label-caps text-label-caps border border-primary/20 hover:bg-primary/5 transition-colors flex justify-center items-center gap-xs text-xs font-semibold" onclick="showRunDetails('${run.run_id}')">
+          View Details
+          <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+        </button>
       `;
       
-      tableBody.appendChild(row);
+      // Scaled down animation on click
+      card.addEventListener('mousedown', () => card.style.transform = 'scale(0.99)');
+      card.addEventListener('mouseup', () => card.style.transform = 'scale(1)');
+      card.addEventListener('mouseleave', () => card.style.transform = 'scale(1)');
+      
+      logsCardsContainer.appendChild(card);
     });
   } catch (err) {
-    tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-error">Failed to load run logs: ${escapeHtml(err.message)}</td></tr>`;
+    logsCardsContainer.innerHTML = `<div class="empty-state py-xl text-center text-error"><p>Failed to load run logs: ${escapeHtml(err.message)}</p></div>`;
   }
 }
 
@@ -461,24 +657,26 @@ window.showRunDetails = async function (runId) {
     detailWeek.textContent = run.metadata.iso_week;
     detailTime.textContent = new Date(run.metadata.timestamp).toLocaleString();
     detailIngested.textContent = `${run.stats.reviews_ingested || 0} reviews`;
-    detailStatus.textContent = run.stats.status || "Unknown";
     
-    // Fill themes
+    const success = run.stats.status === "completed_success" || run.stats.status === "dry_run_success";
+    detailStatus.textContent = (run.stats.status || "Unknown").replace(/_/g, " ").toUpperCase();
+    detailStatus.className = success ? "text-primary text-xs font-semibold" : "text-error text-xs font-semibold";
+    
+    // Fill themes cards
     detailThemesList.innerHTML = "";
     const themes = run.report?.themes || [];
     if (themes.length === 0) {
-      detailThemesList.innerHTML = `<p class="text-muted">No themes generated in this run.</p>`;
+      detailThemesList.innerHTML = `<p class="text-outline text-xs">No themes generated in this run.</p>`;
     } else {
       themes.forEach(theme => {
         const themeCard = document.createElement("div");
-        themeCard.className = "detail-theme-item";
+        themeCard.className = "bg-white/[0.02] p-md rounded-lg border border-outline-variant/10 space-y-xs";
         themeCard.innerHTML = `
-          <h5>${escapeHtml(theme.theme_name)}</h5>
-          <p class="text-muted" style="font-size: 13px; margin-bottom: 6px;">${escapeHtml(theme.summary)}</p>
-          <strong style="font-size: 12px; color: var(--text-muted);">Quotes:</strong>
-          <blockquote style="font-size: 12px; margin: 4px 0; border-left: 2px solid var(--primary); padding-left: 8px;">
+          <h5 class="font-headline-md text-headline-md text-on-surface font-semibold" style="font-size: 15px;">${escapeHtml(theme.theme_name)}</h5>
+          <p class="text-on-surface-variant text-xs">${escapeHtml(theme.summary)}</p>
+          <div class="pl-sm border-l border-primary/50 py-1 italic text-xs text-on-surface bg-primary/[0.01]">
             "${escapeHtml(theme.quotes?.[0] || 'No quote selected')}"
-          </blockquote>
+          </div>
         `;
         detailThemesList.appendChild(themeCard);
       });
@@ -498,8 +696,146 @@ btnCloseDetail.addEventListener("click", () => {
   modalRunDetail.classList.remove("open");
 });
 
+// Close modal if clicking overlay
+modalRunDetail.addEventListener("click", (e) => {
+  if (e.target === modalRunDetail) {
+    modalRunDetail.classList.remove("open");
+  }
+});
+
 /* ==========================================================================
-   6. Trigger Run Operations
+   6. Progress Drawer & Console Simulation
+   ========================================================================== */
+function openProgressDrawer() {
+  if (!runStartTime) {
+    runStartTime = Date.now();
+  }
+  
+  progressRunId.textContent = "0x" + Math.floor(Math.random()*16777215).toString(16).toUpperCase().substring(0, 5);
+  runProgressDrawer.classList.remove("translate-y-full");
+  runProgressDrawer.classList.add("translate-y-0");
+  
+  if (!logTimer) {
+    consoleLogsStream.innerHTML = `<div class="text-outline/40 font-semibold">// Live telemetry stream established...</div>`;
+    currentLogIndex = 0;
+    logTimer = setInterval(updateLiveConsole, 1200);
+  }
+}
+
+function updateLiveConsole() {
+  // Update run timer counter
+  if (runStartTime) {
+    const diff = Math.floor((Date.now() - runStartTime) / 1000);
+    const min = Math.floor(diff / 60).toString().padStart(2, "0");
+    const sec = (diff % 60).toString().padStart(2, "0");
+    progressRuntime.textContent = `RUN TIME: ${min}:${sec}`;
+    
+    // Dynamic step highlights depending on run elapsed time
+    if (diff < 8) {
+      setStepActive(stepIngestion);
+    } else if (diff < 16) {
+      setStepCompleted(stepIngestion);
+      setStepActive(stepClustering);
+    } else if (diff < 28) {
+      setStepCompleted(stepIngestion);
+      setStepCompleted(stepClustering);
+      setStepActive(stepValidation);
+    } else {
+      setStepCompleted(stepIngestion);
+      setStepCompleted(stepClustering);
+      setStepCompleted(stepValidation);
+      setStepActive(stepDelivery);
+    }
+  }
+  
+  // Stream logs
+  if (currentLogIndex < SIMULATED_LOGS.length) {
+    const log = SIMULATED_LOGS[currentLogIndex];
+    const logDiv = document.createElement("div");
+    
+    const stamp = new Date().toLocaleTimeString(undefined, { hour12: false });
+    
+    if (log.level === "warn") {
+      logDiv.className = "text-outline/80";
+      logDiv.innerHTML = `<span class="text-outline/50">[${stamp}]</span> <span class="text-error font-semibold">WRN:</span> ${escapeHtml(log.text.substring(5))}`;
+    } else {
+      logDiv.className = "text-on-surface";
+      logDiv.innerHTML = `<span class="text-outline/50">[${stamp}]</span> <span class="text-primary-fixed-dim font-semibold">INF:</span> ${escapeHtml(log.text.substring(5))}`;
+    }
+    
+    consoleLogsStream.appendChild(logDiv);
+    consoleLogsStream.scrollTop = consoleLogsStream.scrollHeight;
+    currentLogIndex++;
+  }
+}
+
+function setStepActive(stepEl) {
+  stepEl.classList.remove("opacity-40");
+  const icon = stepEl.querySelector(".step-icon");
+  icon.className = "step-icon z-10 w-6 h-6 rounded-full bg-surface-variant/50 border border-primary flex items-center justify-center transition-all duration-300";
+  icon.innerHTML = `<span class="material-symbols-outlined text-[16px] text-primary animate-spin-slow" data-icon="progress_activity">progress_activity</span>`;
+  stepEl.querySelector("h4").className = "font-body-lg text-body-lg text-primary font-medium transition-colors";
+}
+
+function setStepCompleted(stepEl) {
+  stepEl.classList.remove("opacity-40");
+  const icon = stepEl.querySelector(".step-icon");
+  icon.className = "step-icon z-10 w-6 h-6 rounded-full bg-primary flex items-center justify-center transition-all duration-300";
+  icon.innerHTML = `<span class="material-symbols-outlined text-[14px] text-background font-bold" data-icon="check">check</span>`;
+  stepEl.querySelector("h4").className = "font-body-lg text-body-lg text-on-surface font-medium transition-colors";
+}
+
+function finishProgressStream(success) {
+  if (logTimer) {
+    clearInterval(logTimer);
+    logTimer = null;
+  }
+  
+  // Mark all steps complete
+  setStepCompleted(stepIngestion);
+  setStepCompleted(stepClustering);
+  setStepCompleted(stepValidation);
+  setStepCompleted(stepDelivery);
+  
+  // Append end log
+  const logDiv = document.createElement("div");
+  logDiv.className = success ? "text-primary font-semibold mt-sm" : "text-error font-semibold mt-sm";
+  logDiv.innerHTML = success 
+    ? `<span class="text-outline/50">[${new Date().toLocaleTimeString(undefined, { hour12: false })}]</span> SYSTEM: Run completed successfully. Click close console.` 
+    : `<span class="text-outline/50">[${new Date().toLocaleTimeString(undefined, { hour12: false })}]</span> SYSTEM: Run aborted/failed.`;
+  consoleLogsStream.appendChild(logDiv);
+  consoleLogsStream.scrollTop = consoleLogsStream.scrollHeight;
+  
+  progressRunId.textContent = success ? "FINISHED" : "FAILED";
+  runStartTime = null;
+}
+
+// Drawer Toggle Minimization
+btnToggleDrawer.addEventListener("click", () => {
+  if (drawerExpanded) {
+    drawerContentBody.style.height = "0px";
+    btnToggleDrawer.querySelector(".material-symbols-outlined").style.transform = "rotate(180deg)";
+    drawerExpanded = false;
+  } else {
+    drawerContentBody.style.height = "360px";
+    btnToggleDrawer.querySelector(".material-symbols-outlined").style.transform = "rotate(0deg)";
+    drawerExpanded = true;
+  }
+});
+
+btnCancelRun.addEventListener("click", () => {
+  // Reset drawer
+  runProgressDrawer.classList.add("translate-y-full");
+  runProgressDrawer.classList.remove("translate-y-0");
+  if (logTimer) {
+    clearInterval(logTimer);
+    logTimer = null;
+  }
+  runStartTime = null;
+});
+
+/* ==========================================================================
+   7. Form Trigger Modal Operations
    ========================================================================== */
 btnTriggerRunModal.addEventListener("click", () => {
   modalRunError.style.display = "none";
@@ -512,6 +848,12 @@ btnCloseModal.addEventListener("click", () => {
 
 btnCancelModal.addEventListener("click", () => {
   modalRunPipeline.classList.remove("open");
+});
+
+modalRunPipeline.addEventListener("click", (e) => {
+  if (e.target === modalRunPipeline) {
+    modalRunPipeline.classList.remove("open");
+  }
 });
 
 formRunPipeline.addEventListener("submit", async (e) => {
@@ -537,17 +879,19 @@ formRunPipeline.addEventListener("submit", async (e) => {
       body: JSON.stringify(payload)
     });
     
-    // Close form modal and open progress drawer
+    // Close selection modal
     modalRunPipeline.classList.remove("open");
-    runProgressDrawer.style.display = "block";
     
     // Reset steps
-    stepIngestion.className = "step active";
-    stepClustering.className = "step";
-    stepValidation.className = "step";
-    stepDelivery.className = "step";
+    stepIngestion.className = "flex gap-md relative active";
+    stepClustering.className = "flex gap-md relative opacity-40";
+    stepValidation.className = "flex gap-md relative opacity-40";
+    stepDelivery.className = "flex gap-md relative opacity-40";
     
-    // Start polling status
+    // Launch slide drawer console
+    openProgressDrawer();
+    
+    // Poll server status
     checkServerStatus();
     
   } catch (error) {
@@ -557,7 +901,7 @@ formRunPipeline.addEventListener("submit", async (e) => {
 });
 
 /* ==========================================================================
-   7. Helpers & Initialization
+   8. Helpers & Initializer
    ========================================================================== */
 function escapeHtml(str) {
   if (!str) return "";
@@ -569,6 +913,6 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-// Initial Loading
+// Initial Loading Setup
 refreshAllData();
 setInterval(checkServerStatus, 5000);
