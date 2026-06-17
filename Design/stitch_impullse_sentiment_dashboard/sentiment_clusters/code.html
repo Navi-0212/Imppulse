@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sentiment Clusters - Impullse</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Outfit:wght@500;600;700&amp;family=JetBrains+Mono:wght@400&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;family=Outfit:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(60, 74, 67, 0.5);
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.2s ease-in;
+            opacity: 0;
+        }
+        .accordion-item.active .accordion-content {
+            max-height: 1000px;
+            opacity: 1;
+        }
+        .accordion-item.active .chevron-icon {
+            transform: rotate(180deg);
+        }
+        body {
+            background-color: #080b11;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary-fixed": "#dce2f9",
+                      "error-container": "#93000a",
+                      "surface-dim": "#0e1512",
+                      "on-surface": "#dde4de",
+                      "error": "#ffb4ab",
+                      "on-tertiary-fixed-variant": "#44474e",
+                      "surface-container-lowest": "#09100c",
+                      "on-tertiary-container": "#3b3e45",
+                      "on-background": "#dde4de",
+                      "outline-variant": "#3c4a43",
+                      "on-error-container": "#ffdad6",
+                      "on-secondary-fixed-variant": "#404659",
+                      "primary-fixed-dim": "#44deac",
+                      "surface-tint": "#44deac",
+                      "background": "#0e1512",
+                      "on-primary": "#003828",
+                      "on-surface-variant": "#bbcac1",
+                      "primary-fixed": "#67fcc7",
+                      "surface-variant": "#2f3632",
+                      "on-primary-container": "#004733",
+                      "secondary": "#c0c6dd",
+                      "on-secondary": "#2a3042",
+                      "secondary-container": "#404659",
+                      "primary-container": "#00c090",
+                      "tertiary": "#c4c6cf",
+                      "secondary-fixed-dim": "#c0c6dd",
+                      "on-tertiary": "#2d3037",
+                      "surface": "#0e1512",
+                      "surface-container-highest": "#2f3632",
+                      "on-primary-fixed": "#002116",
+                      "inverse-primary": "#006c4f",
+                      "on-error": "#690005",
+                      "tertiary-fixed-dim": "#c4c6cf",
+                      "outline": "#85948c",
+                      "tertiary-fixed": "#e0e2eb",
+                      "inverse-surface": "#dde4de",
+                      "surface-bright": "#333b37",
+                      "on-primary-fixed-variant": "#00513b",
+                      "surface-container-low": "#161d1a",
+                      "on-secondary-fixed": "#151b2c",
+                      "on-tertiary-fixed": "#191c22",
+                      "inverse-on-surface": "#2b322e",
+                      "on-secondary-container": "#afb4cb",
+                      "surface-container": "#1a211e",
+                      "tertiary-container": "#a7a9b2",
+                      "primary": "#44deac",
+                      "surface-container-high": "#242c28"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "gutter": "24px",
+                      "xl": "40px",
+                      "md": "16px",
+                      "lg": "24px",
+                      "unit": "4px",
+                      "sm": "8px",
+                      "xs": "4px",
+                      "container-max": "1440px"
+              },
+              "fontFamily": {
+                      "data-mono": ["JetBrains Mono"],
+                      "body-lg": ["Inter"],
+                      "headline-lg": ["Outfit"],
+                      "display": ["Outfit"],
+                      "headline-md": ["Outfit"],
+                      "headline-lg-mobile": ["Outfit"],
+                      "body-sm": ["Inter"],
+                      "label-caps": ["Inter"]
+              },
+              "fontSize": {
+                      "data-mono": ["13px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "400"}],
+                      "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                      "display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                      "headline-md": ["20px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                      "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                      "label-caps": ["11px", {"lineHeight": "1", "letterSpacing": "0.06em", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+      </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center px-md py-sm w-full z-50 bg-background/80 backdrop-blur-md docked full-width top-0 fixed border-b border-outline-variant">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="sensors">sensors</span>
+<h1 class="font-headline-md text-headline-md font-bold text-primary tracking-tight">Sentiment Clusters</h1>
+</div>
+<button class="bg-primary-container text-on-primary-container font-semibold px-sm py-xs rounded-lg text-label-caps hover:bg-primary-container/90 transition-all active:scale-95 duration-100">
+            Trigger Ingestion Run
+        </button>
+</header>
+<main class="pt-24 px-md space-y-md">
+<!-- Summary Dashboard Intro -->
+<div class="mb-lg">
+<span class="font-data-mono text-data-mono text-primary/60 block mb-xs">INTELLIGENCE OVERVIEW</span>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface font-medium">Real-time Feedback Signal</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-sm">Aggregating sentiment from terminal chats, support logs, and market sentiment feeds over the last 6 hours.</p>
+</div>
+<!-- Accordion Section -->
+<div class="space-y-sm" id="accordion-group">
+<!-- Category 1 -->
+<div class="accordion-item glass-panel rounded-xl overflow-hidden active" id="cat-1">
+<button class="w-full flex items-center justify-between p-lg text-left hover:bg-surface-variant/50 transition-colors" onclick="toggleAccordion('cat-1')">
+<div class="flex flex-col">
+<span class="font-data-mono text-label-caps text-primary mb-1 uppercase tracking-widest">CRITICAL SIGNAL</span>
+<span class="font-headline-md text-headline-md text-on-surface">App Stability at Market Open</span>
+</div>
+<span class="material-symbols-outlined chevron-icon transition-transform duration-300 text-outline" data-icon="expand_more">expand_more</span>
+</button>
+<div class="accordion-content px-lg pb-lg">
+<div class="pt-md border-t border-outline-variant space-y-md">
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+                            A significant cluster of users reports intermittent latency during the first 15 minutes of the NY session. The sentiment is predominantly anxious as trade execution delays impact entry prices.
+                        </p>
+<div class="pl-md border-l-2 border-primary py-xs italic bg-surface-variant/20 rounded-r-lg">
+<span class="font-data-mono text-label-caps text-primary/70 block mb-1">Verbatim Feedback Quotes</span>
+<blockquote class="font-body-sm text-body-sm text-on-surface">
+                                "The dashboard froze exactly at 9:30 AM EST. Missed my limit order by 40 pips. This happens every Monday."
+                            </blockquote>
+</div>
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block mb-sm">Actionable Recommendations</span>
+<ul class="space-y-xs">
+<li class="flex items-start gap-xs text-body-sm font-body-sm">
+<span class="material-symbols-outlined text-primary text-[16px] mt-1" data-icon="check_circle">check_circle</span>
+                                    Scale WebSocket load balancers 10m prior to market open.
+                                </li>
+<li class="flex items-start gap-xs text-body-sm font-body-sm">
+<span class="material-symbols-outlined text-primary text-[16px] mt-1" data-icon="check_circle">check_circle</span>
+                                    Implement proactive 'System Load' UI warning to manage user expectations.
+                                </li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<!-- Category 2 -->
+<div class="accordion-item glass-panel rounded-xl overflow-hidden" id="cat-2">
+<button class="w-full flex items-center justify-between p-lg text-left hover:bg-surface-variant/50 transition-colors" onclick="toggleAccordion('cat-2')">
+<div class="flex flex-col">
+<span class="font-data-mono text-label-caps text-secondary mb-1 uppercase tracking-widest">UX FRICTION</span>
+<span class="font-headline-md text-headline-md text-on-surface">Support Ticket Friction</span>
+</div>
+<span class="material-symbols-outlined chevron-icon transition-transform duration-300 text-outline" data-icon="expand_more">expand_more</span>
+</button>
+<div class="accordion-content px-lg pb-lg">
+<div class="pt-md border-t border-outline-variant space-y-md">
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+                            Users are expressing frustration with the automated triage bot. The sentiment indicates that the bot fails to recognize complex derivative terminology, leading to repeated redirections.
+                        </p>
+<div class="pl-md border-l-2 border-secondary py-xs italic bg-surface-variant/20 rounded-r-lg">
+<span class="font-data-mono text-label-caps text-secondary block mb-1">Verbatim Feedback Quotes</span>
+<blockquote class="font-body-sm text-body-sm text-on-surface">
+                                "The bot has no clue what a 'straddle' or 'iron condor' is. I keep getting asked if I forgot my password."
+                            </blockquote>
+</div>
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block mb-sm">Actionable Recommendations</span>
+<ul class="space-y-xs">
+<li class="flex items-start gap-xs text-body-sm font-body-sm">
+<span class="material-symbols-outlined text-secondary text-[16px] mt-1" data-icon="check_circle">check_circle</span>
+                                    Inject domain-specific financial ontologies into the LLM context window.
+                                </li>
+<li class="flex items-start gap-xs text-body-sm font-body-sm">
+<span class="material-symbols-outlined text-secondary text-[16px] mt-1" data-icon="check_circle">check_circle</span>
+                                    Enable 'One-Click Escape' to human agent for authenticated Pro tier users.
+                                </li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<!-- Visual Asset: Decorative Data Visualization -->
+<div class="relative h-48 rounded-xl overflow-hidden glass-panel flex items-center justify-center">
+
+<div class="relative z-10 text-center">
+<span class="font-label-caps text-label-caps text-primary bg-primary/10 px-sm py-1 rounded-full border border-primary/20">LIVE DATA STREAM</span>
+<p class="font-data-mono text-data-mono text-on-surface mt-2 opacity-80">Sentiment Convergence: 88.4%</p>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-lg py-md md:hidden bg-surface-dim/90 backdrop-blur-xl border-t border-outline-variant shadow-[0_-4px_20px_rgba(0,192,144,0.1)] rounded-t-xl">
+<a class="text-outline hover:text-primary-fixed-dim transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+</a>
+<a class="text-primary scale-110 drop-shadow-[0_0_8px_rgba(68,222,172,0.4)]" href="#">
+<span class="material-symbols-outlined" data-icon="bubble_chart" style="font-variation-settings: 'FILL' 1;">bubble_chart</span>
+</a>
+<a class="text-outline hover:text-primary-fixed-dim transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="manage_search">manage_search</span>
+</a>
+<a class="text-outline hover:text-primary-fixed-dim transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</a>
+</nav>
+<script>
+        function toggleAccordion(id) {
+            const item = document.getElementById(id);
+            const isActive = item.classList.contains('active');
+            
+            // Close all others if desired (keeping current for focus)
+            // document.querySelectorAll('.accordion-item').forEach(el => el.classList.remove('active'));
+            
+            if (isActive) {
+                item.classList.remove('active');
+            } else {
+                item.classList.add('active');
+            }
+        }
+
+        // Add micro-interaction to buttons
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('mousedown', () => button.classList.add('scale-95'));
+            button.addEventListener('mouseup', () => button.classList.remove('scale-95'));
+            button.addEventListener('mouseleave', () => button.classList.remove('scale-95'));
+        });
+    </script>
+</body></html>

@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Impullse | Pipeline Execution</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Outfit:wght@500;600;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        @keyframes rotate-spinner {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 0 0 rgba(0, 192, 144, 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(0, 192, 144, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 192, 144, 0); }
+        }
+        @keyframes blink-cursor {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        
+        .animate-spin-slow {
+            animation: rotate-spinner 2s linear infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .animate-spin-slow, .animate-pulse-glow, .animate-blink-cursor {
+                animation: none !important;
+            }
+        }
+        
+        .animate-pulse-glow {
+            animation: pulse-glow 2s infinite;
+        }
+        .animate-blink-cursor {
+            animation: blink-cursor 0.8s step-end infinite;
+        }
+
+        .glass-panel {
+            background: rgba(14, 21, 18, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(60, 74, 67, 0.5);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(68, 222, 172, 0.2);
+            border-radius: 2px;
+        }
+        .status-dot-pulse {
+            box-shadow: 0 0 8px rgba(68, 222, 172, 0.4);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ffb4ab",
+                        "surface-dim": "#0e1512",
+                        "primary-fixed-dim": "#44deac",
+                        "primary": "#44deac",
+                        "on-surface-variant": "#bbcac1",
+                        "on-secondary-fixed": "#151b2c",
+                        "on-primary": "#003828",
+                        "surface-bright": "#333b37",
+                        "secondary-container": "#404659",
+                        "inverse-on-surface": "#2b322e",
+                        "secondary-fixed": "#dce2f9",
+                        "background": "#0e1512",
+                        "surface-container-lowest": "#09100c",
+                        "surface-container": "#1a211e",
+                        "tertiary": "#c4c6cf",
+                        "tertiary-fixed": "#e0e2eb",
+                        "primary-fixed": "#67fcc7",
+                        "secondary": "#c0c6dd",
+                        "on-surface": "#dde4de",
+                        "primary-container": "#00c090",
+                        "on-error-container": "#ffdad6",
+                        "surface-variant": "#2f3632",
+                        "surface-container-high": "#242c28",
+                        "on-tertiary-fixed": "#191c22",
+                        "on-tertiary-container": "#3b3e45",
+                        "surface-container-low": "#161d1a",
+                        "on-tertiary-fixed-variant": "#44474e",
+                        "outline-variant": "#3c4a43",
+                        "inverse-surface": "#dde4de",
+                        "on-error": "#690005",
+                        "error-container": "#93000a",
+                        "tertiary-container": "#a7a9b2",
+                        "inverse-primary": "#006c4f",
+                        "surface-tint": "#44deac",
+                        "outline": "#85948c",
+                        "on-primary-fixed": "#002116",
+                        "surface-container-highest": "#2f3632",
+                        "on-secondary-container": "#afb4cb",
+                        "on-background": "#dde4de",
+                        "on-secondary-fixed-variant": "#404659",
+                        "on-primary-fixed-variant": "#00513b",
+                        "on-tertiary": "#2d3037",
+                        "tertiary-fixed-dim": "#c4c6cf",
+                        "on-secondary": "#2a3042",
+                        "on-primary-container": "#004733",
+                        "surface": "#0e1512",
+                        "secondary-fixed-dim": "#c0c6dd"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "container-max": "1440px",
+                        "xl": "40px",
+                        "sm": "8px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Outfit"],
+                        "display": ["Outfit"],
+                        "data-mono": ["JetBrains Mono"],
+                        "body-lg": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "headline-md": ["Outfit"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                        "display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "data-mono": ["13px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "label-caps": ["11px", {"lineHeight": "1", "letterSpacing": "0.06em", "fontWeight": "600"}],
+                        "headline-md": ["20px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-sm min-h-screen selection:bg-primary/30 overflow-hidden">
+<!-- Main Navigation Bar -->
+<header class="flex justify-between items-center px-md py-sm w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant fixed top-0">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="sensors">sensors</span>
+<span class="font-headline-md text-headline-md font-bold text-primary tracking-tight">Impullse</span>
+</div>
+<button class="bg-primary text-on-primary px-md py-xs rounded-lg font-label-caps text-label-caps hover:bg-primary-fixed-dim transition-colors active:scale-95 duration-100">
+            Trigger Ingestion Run
+        </button>
+</header>
+<!-- Content Area (Dashboard Simulation) -->
+<main class="relative z-10 pt-20 px-lg max-w-container-max mx-auto h-screen grid grid-cols-12 gap-gutter">
+<div class="col-span-8 py-lg">
+<div class="mb-xl">
+<p class="font-label-caps text-label-caps text-primary mb-xs">INTELLIGENCE OVERVIEW</p>
+<h1 class="font-display text-display text-on-surface">Global Sentiment Clusters</h1>
+</div>
+<div class="grid grid-cols-2 gap-md">
+<div class="glass-panel p-lg rounded-xl">
+<p class="font-data-mono text-data-mono text-outline mb-sm">NEURAL_DENSITY_01</p>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-md">Pricing Sensitivity</h3>
+<div class="w-full bg-surface-variant h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-3/4"></div>
+</div>
+</div>
+<div class="glass-panel p-lg rounded-xl">
+<p class="font-data-mono text-data-mono text-outline mb-sm">NEURAL_DENSITY_02</p>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-md">UX Friction Points</h3>
+<div class="w-full bg-surface-variant h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-1/2"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="col-span-4 py-lg">
+<div class="glass-panel p-lg rounded-xl h-full border-dashed border-outline-variant/50 flex flex-col items-center justify-center text-center opacity-60">
+<span class="material-symbols-outlined text-4xl mb-md text-outline" data-icon="monitoring">monitoring</span>
+<p class="font-label-caps text-label-caps">Advanced metrics loading...</p>
+</div>
+</div>
+</main>
+<!-- Sidebar (Shared Component) -->
+<nav class="fixed left-0 top-0 h-full z-40 flex flex-col p-md bg-surface-container-lowest border-r border-outline-variant w-64 pt-20">
+<div class="flex items-center gap-md p-md mb-lg">
+<div class="w-8 h-8 rounded bg-primary/20 flex items-center justify-center">
+<div class="w-2 h-2 rounded-full bg-primary status-dot-pulse"></div>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface">System Idle</p>
+<p class="font-body-sm text-body-sm text-outline">Impullse Intelligence</p>
+</div>
+</div>
+<div class="space-y-sm">
+<a class="flex items-center gap-md p-md bg-primary-container text-on-primary-container font-semibold rounded-lg translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+<a class="flex items-center gap-md p-md text-on-surface-variant font-medium hover:bg-surface-variant transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="bubble_chart">bubble_chart</span>
+<span class="font-label-caps text-label-caps">Sentiment Clusters</span>
+</a>
+<a class="flex items-center gap-md p-md text-on-surface-variant font-medium hover:bg-surface-variant transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="manage_search">manage_search</span>
+<span class="font-label-caps text-label-caps">Review Explorer</span>
+</a>
+<a class="flex items-center gap-md p-md text-on-surface-variant font-medium hover:bg-surface-variant transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-label-caps text-label-caps">Audit Logs</span>
+</a>
+</div>
+<div class="mt-auto p-md">
+<p class="font-data-mono text-data-mono text-outline opacity-50">v1.0.4</p>
+</div>
+</nav>
+<!-- THE CONSOLE DRAWER (Slide Up) -->
+<div class="fixed inset-x-0 bottom-0 z-[60] flex flex-col items-center pointer-events-none">
+<div class="w-full max-w-4xl glass-panel rounded-t-2xl shadow-2xl pointer-events-auto transform transition-transform duration-500 ease-out translate-y-0" id="console-drawer">
+<!-- Header -->
+<div class="flex justify-between items-center px-lg py-md border-b border-outline-variant">
+<div class="flex items-center gap-md">
+<div class="w-2 h-2 rounded-full bg-primary animate-pulse-glow"></div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Pipeline Execution</h2>
+<span class="font-data-mono text-data-mono bg-surface-variant px-sm py-0.5 rounded text-outline">0x442FF</span>
+</div>
+<div class="flex gap-sm">
+<button class="p-1 hover:bg-surface-variant rounded transition-colors text-outline">
+<span class="material-symbols-outlined text-md" data-icon="expand_more">expand_more</span>
+</button>
+</div>
+</div>
+<!-- Content Container -->
+<div class="flex flex-col md:flex-row h-[420px]">
+<!-- Left: Progress Tracking -->
+<div class="w-full md:w-1/2 p-lg border-r border-outline-variant overflow-y-auto custom-scrollbar">
+<div class="space-y-lg relative">
+<!-- Connecting Line -->
+<div class="absolute left-[11px] top-4 bottom-4 w-px bg-outline-variant/30"></div>
+<!-- Stage 1: Completed -->
+<div class="flex gap-md relative">
+<div class="z-10 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-on-primary font-bold" data-icon="check">check</span>
+</div>
+<div>
+<h4 class="font-body-lg text-body-lg text-primary font-medium">Ingestion</h4>
+<p class="text-on-surface-variant text-body-sm">Fetched 4,280 reviews from App Store/Play Store.</p>
+</div>
+</div>
+<!-- Stage 2: In Progress -->
+<div class="flex gap-md relative">
+<div class="z-10 w-6 h-6 rounded-full bg-surface-variant border border-primary flex items-center justify-center animate-pulse-glow">
+<span class="material-symbols-outlined text-[16px] text-primary animate-spin-slow" data-icon="progress_activity">progress_activity</span>
+</div>
+<div>
+<h4 class="font-body-lg text-body-lg text-on-surface font-medium">Semantic Clustering</h4>
+<p class="text-on-surface-variant text-body-sm">Identifying neural density patterns...</p>
+</div>
+</div>
+<!-- Stage 3: Pending -->
+<div class="flex gap-md relative opacity-40">
+<div class="z-10 w-6 h-6 rounded-full bg-surface-variant border border-outline flex items-center justify-center">
+<div class="w-1.5 h-1.5 rounded-full bg-outline"></div>
+</div>
+<div>
+<h4 class="font-body-lg text-body-lg text-on-surface-variant font-medium">Quote Grounding Validation (GQV)</h4>
+<p class="text-on-surface-variant text-body-sm">Verifying verbatim accuracy.</p>
+</div>
+</div>
+<!-- Stage 4: Pending -->
+<div class="flex gap-md relative opacity-40">
+<div class="z-10 w-6 h-6 rounded-full bg-surface-variant border border-outline flex items-center justify-center">
+<div class="w-1.5 h-1.5 rounded-full bg-outline"></div>
+</div>
+<div>
+<h4 class="font-body-lg text-body-lg text-on-surface-variant font-medium">Workspace Delivery</h4>
+<p class="text-on-surface-variant text-body-sm">Finalizing Google Docs intelligence report.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Right: Live Logs -->
+<div class="w-full md:w-1/2 flex flex-col bg-surface-container-lowest/50">
+<div class="p-md border-b border-outline-variant flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-outline">SYSTEM_LOGS_STREAM</span>
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse-glow"></span>
+</div>
+<div class="flex-1 p-lg overflow-y-auto custom-scrollbar font-data-mono text-data-mono space-y-xs" id="log-container">
+<div class="text-outline/60">[14:02:11] <span class="text-primary-fixed-dim">INF:</span> Initializing embedding vector space</div>
+<div class="text-outline/60">[14:02:12] <span class="text-primary-fixed-dim">INF:</span> Loading model weights (BERT-v2-finetuned)</div>
+<div class="text-outline/60">[14:02:14] <span class="text-primary-fixed-dim">INF:</span> Connection established to data_lake_04</div>
+<div class="text-outline/80">[14:02:15] <span class="text-error">WRN:</span> Retrying grounding check for cluster 4</div>
+<div class="text-outline/60">[14:02:17] <span class="text-primary-fixed-dim">INF:</span> Tokenization complete for 4,280 entries</div>
+<div class="text-outline/60">[14:02:19] <span class="text-primary-fixed-dim">INF:</span> Map-reduce job 0x77 dispatched</div>
+<div class="text-on-surface flex items-center gap-1">
+<span>[14:02:22] <span class="text-primary">ACT:</span> <span id="streaming-text">Beginning cluster projection</span></span>
+<span class="inline-block w-1.5 h-3.5 bg-primary align-middle animate-blink-cursor"></span>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer -->
+<div class="px-lg py-md border-t border-outline-variant flex justify-between items-center bg-surface-container-high/20">
+<div class="flex items-center gap-sm">
+<span class="font-label-caps text-label-caps text-outline" id="run-time-counter">RUN TIME: 00:04:12</span>
+</div>
+<button class="px-lg py-sm border border-outline-variant text-on-surface-variant rounded-lg font-label-caps text-label-caps hover:bg-error/10 hover:text-error hover:border-error transition-all active:scale-95 duration-150">
+                    Cancel Run
+                </button>
+</div>
+</div>
+</div>
+<!-- Hidden Mobile Nav Trigger -->
+<div class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-lg py-md md:hidden bg-surface-dim/90 backdrop-blur-xl border-t border-outline-variant shadow-[0_-4px_20px_rgba(0,192,144,0.1)]">
+<span class="material-symbols-outlined text-primary scale-110 drop-shadow-[0_0_8px_rgba(68,222,172,0.4)]" data-icon="dashboard">dashboard</span>
+<span class="material-symbols-outlined text-outline" data-icon="bubble_chart">bubble_chart</span>
+<span class="material-symbols-outlined text-outline" data-icon="manage_search">manage_search</span>
+<span class="material-symbols-outlined text-outline" data-icon="history">history</span>
+</div>
+<script>
+        // Simulate streaming text effect for logs
+        const streamingTextElement = document.getElementById('streaming-text');
+        const textToStream = "Beginning cluster projection... Analyzing neural weights... Optimization pass 1/3 complete...";
+        let currentTextIndex = 0;
+
+        function streamText() {
+            if (currentTextIndex < textToStream.length) {
+                streamingTextElement.textContent = textToStream.slice(0, currentTextIndex + 1);
+                currentTextIndex++;
+                setTimeout(streamText, 50 + Math.random() * 50);
+            } else {
+                setTimeout(() => {
+                    currentTextIndex = 0;
+                    streamText();
+                }, 3000);
+            }
+        }
+
+        // Run time counter simulation
+        let seconds = 252; // 04:12
+        function updateCounter() {
+            seconds++;
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            document.getElementById('run-time-counter').textContent = 
+                `RUN TIME: ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}:${(Math.floor(Math.random() * 99)).toString().padStart(2, '0')}`;
+        }
+
+        // Initialize micro-interactions if motion is not reduced
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            streamText();
+            setInterval(updateCounter, 1000);
+        }
+
+        const drawer = document.getElementById('console-drawer');
+        // Console toggle logic could go here for expand/collapse
+    </script>
+</body></html>
