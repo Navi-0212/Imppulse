@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Outfit:wght@500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed": "#dce2f9",
+                    "error-container": "#93000a",
+                    "surface-dim": "#0e1512",
+                    "on-surface": "#dde4de",
+                    "error": "#ffb4ab",
+                    "on-tertiary-fixed-variant": "#44474e",
+                    "surface-container-lowest": "#09100c",
+                    "on-tertiary-container": "#3b3e45",
+                    "on-background": "#dde4de",
+                    "outline-variant": "#3c4a43",
+                    "on-error-container": "#ffdad6",
+                    "on-secondary-fixed-variant": "#404659",
+                    "primary-fixed-dim": "#44deac",
+                    "surface-tint": "#44deac",
+                    "background": "#0e1512",
+                    "on-primary": "#003828",
+                    "on-surface-variant": "#bbcac1",
+                    "primary-fixed": "#67fcc7",
+                    "surface-variant": "#2f3632",
+                    "on-primary-container": "#004733",
+                    "secondary": "#c0c6dd",
+                    "on-secondary": "#2a3042",
+                    "secondary-container": "#404659",
+                    "primary-container": "#00c090",
+                    "tertiary": "#c4c6cf",
+                    "secondary-fixed-dim": "#c0c6dd",
+                    "on-tertiary": "#2d3037",
+                    "surface": "#0e1512",
+                    "surface-container-highest": "#2f3632",
+                    "on-primary-fixed": "#002116",
+                    "inverse-primary": "#006c4f",
+                    "on-error": "#690005",
+                    "tertiary-fixed-dim": "#c4c6cf",
+                    "outline": "#85948c",
+                    "tertiary-fixed": "#e0e2eb",
+                    "inverse-surface": "#dde4de",
+                    "surface-bright": "#333b37",
+                    "on-primary-fixed-variant": "#00513b",
+                    "surface-container-low": "#161d1a",
+                    "on-secondary-fixed": "#151b2c",
+                    "on-tertiary-fixed": "#191c22",
+                    "inverse-on-surface": "#2b322e",
+                    "on-secondary-container": "#afb4cb",
+                    "surface-container": "#1a211e",
+                    "tertiary-container": "#a7a9b2",
+                    "primary": "#44deac",
+                    "surface-container-high": "#242c28"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "xl": "40px",
+                    "md": "16px",
+                    "lg": "24px",
+                    "unit": "4px",
+                    "sm": "8px",
+                    "xs": "4px",
+                    "container-max": "1440px"
+            },
+            "fontFamily": {
+                    "data-mono": ["JetBrains Mono"],
+                    "body-lg": ["Inter"],
+                    "headline-lg": ["Outfit"],
+                    "display": ["Outfit"],
+                    "headline-md": ["Outfit"],
+                    "headline-lg-mobile": ["Outfit"],
+                    "body-sm": ["Inter"],
+                    "label-caps": ["Inter"]
+            },
+            "fontSize": {
+                    "data-mono": ["13px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                    "display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "headline-md": ["20px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "label-caps": ["11px", {"lineHeight": "1", "letterSpacing": "0.06em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0e1512;
+            color: #dde4de;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .surface-glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(133, 148, 140, 0.2);
+        }
+        .active-glow {
+            box-shadow: 0 0 20px rgba(0, 192, 144, 0.15);
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0e1512;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3c4a43;
+            border-radius: 10px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="flex flex-col min-h-screen">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 bg-background/80 backdrop-blur-md flex justify-between items-center px-md py-sm border-b border-outline-variant">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="sensors">sensors</span>
+<h1 class="font-headline-md text-headline-md font-bold text-primary tracking-tight">Audit Logs</h1>
+</div>
+<button class="bg-primary-container text-on-primary-container px-sm py-xs font-label-caps text-label-caps rounded-lg hover:bg-surface-variant/50 transition-colors active:scale-95 duration-100">
+            Trigger Ingestion Run
+        </button>
+</header>
+<!-- Main Content -->
+<main class="flex-1 mt-[56px] mb-[72px] p-md overflow-x-hidden">
+<!-- Dashboard Header Stats (Subtle) -->
+<div class="grid grid-cols-2 gap-sm mb-lg">
+<div class="surface-glass p-md rounded-xl">
+<span class="font-label-caps text-label-caps text-outline block mb-xs uppercase">Total Cycles</span>
+<span class="font-data-mono text-headline-md text-primary">1,248</span>
+</div>
+<div class="surface-glass p-md rounded-xl">
+<span class="font-label-caps text-label-caps text-outline block mb-xs uppercase">Integrity Score</span>
+<span class="font-data-mono text-headline-md text-primary">99.8%</span>
+</div>
+</div>
+<!-- Filter / Search Section -->
+<div class="mb-md flex items-center gap-sm">
+<div class="relative flex-1">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm" data-icon="search">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-lg pl-9 pr-4 py-2 font-body-sm text-body-sm focus:border-primary focus:ring-0 outline-none transition-all" placeholder="Search Trace ID..." type="text"/>
+</div>
+<button class="surface-glass p-2 rounded-lg text-outline">
+<span class="material-symbols-outlined block" data-icon="filter_list">filter_list</span>
+</button>
+</div>
+<!-- Audit Log Chronological List -->
+<div class="space-y-sm">
+<!-- Row 1 -->
+<div class="surface-glass p-md rounded-xl hover:bg-white/[0.05] transition-all group active:scale-[0.98]">
+<div class="flex justify-between items-start mb-sm">
+<div class="flex flex-col">
+<span class="font-data-mono text-xs text-outline mb-1">2023-10-24 14:02:11</span>
+<div class="flex items-center gap-2">
+<span class="font-label-caps text-[10px] bg-surface-container px-1.5 py-0.5 rounded text-secondary border border-outline-variant">W24</span>
+<span class="font-body-sm font-semibold text-on-surface">Execution ID: TX-8492</span>
+</div>
+</div>
+<div class="px-2 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-label-caps">
+                        DELIVERED
+                    </div>
+</div>
+<div class="grid grid-cols-2 gap-gutter mb-md py-sm border-y border-outline-variant/30">
+<div>
+<span class="font-label-caps text-[10px] text-outline block uppercase mb-1">Volume</span>
+<span class="font-data-mono text-body-lg text-on-surface">840 units</span>
+</div>
+<div>
+<span class="font-label-caps text-[10px] text-outline block uppercase mb-1">Clusters</span>
+<span class="font-data-mono text-body-lg text-on-surface">6 active</span>
+</div>
+</div>
+<button class="w-full py-sm rounded-lg text-primary font-label-caps text-label-caps border border-primary/20 hover:bg-primary/5 transition-colors flex justify-center items-center gap-xs">
+                    View Details
+                    <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+<!-- Row 2 (Failed Example) -->
+<div class="surface-glass p-md rounded-xl hover:bg-white/[0.05] transition-all group active:scale-[0.98]">
+<div class="flex justify-between items-start mb-sm">
+<div class="flex flex-col">
+<span class="font-data-mono text-xs text-outline mb-1">2023-10-24 12:45:30</span>
+<div class="flex items-center gap-2">
+<span class="font-label-caps text-[10px] bg-surface-container px-1.5 py-0.5 rounded text-secondary border border-outline-variant">W24</span>
+<span class="font-body-sm font-semibold text-on-surface">Execution ID: TX-8491</span>
+</div>
+</div>
+<div class="px-2 py-1 rounded-full bg-error-container/20 border border-error-container/40 text-error text-[10px] font-label-caps">
+                        FAILED
+                    </div>
+</div>
+<div class="grid grid-cols-2 gap-gutter mb-md py-sm border-y border-outline-variant/30">
+<div>
+<span class="font-label-caps text-[10px] text-outline block uppercase mb-1">Volume</span>
+<span class="font-data-mono text-body-lg text-on-surface">0 units</span>
+</div>
+<div>
+<span class="font-label-caps text-[10px] text-outline block uppercase mb-1">Clusters</span>
+<span class="font-data-mono text-body-lg text-on-surface">0 active</span>
+</div>
+</div>
+<button class="w-full py-sm rounded-lg text-error font-label-caps text-label-caps border border-error/20 hover:bg-error/5 transition-colors flex justify-center items-center gap-xs">
+                    Check Logs
+                    <span class="material-symbols-outlined text-sm" data-icon="report">report</span>
+</button>
+</div>
+<!-- Row 3 -->
+<div class="surface-glass p-md rounded-xl hover:bg-white/[0.05] transition-all group active:scale-[0.98]">
+<div class="flex justify-between items-start mb-sm">
+<div class="flex flex-col">
+<span class="font-data-mono text-xs text-outline mb-1">2023-10-23 23:11:59</span>
+<div class="flex items-center gap-2">
+<span class="font-label-caps text-[10px] bg-surface-container px-1.5 py-0.5 rounded text-secondary border border-outline-variant">W23</span>
+<span class="font-body-sm font-semibold text-on-surface">Execution ID: TX-8490</span>
+</div>
+</div>
+<div class="px-2 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-label-caps">
+                        DELIVERED
+                    </div>
+</div>
+<div class="grid grid-cols-2 gap-gutter mb-md py-sm border-y border-outline-variant/30">
+<div>
+<span class="font-label-caps text-[10px] text-outline block uppercase mb-1">Volume</span>
+<span class="font-data-mono text-body-lg text-on-surface">1,102 units</span>
+</div>
+<div>
+<span class="font-label-caps text-[10px] text-outline block uppercase mb-1">Clusters</span>
+<span class="font-data-mono text-body-lg text-on-surface">12 active</span>
+</div>
+</div>
+<button class="w-full py-sm rounded-lg text-primary font-label-caps text-label-caps border border-primary/20 hover:bg-primary/5 transition-colors flex justify-center items-center gap-xs">
+                    View Details
+                    <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+<!-- Row 4 -->
+<div class="surface-glass p-md rounded-xl hover:bg-white/[0.05] transition-all group active:scale-[0.98]">
+<div class="flex justify-between items-start mb-sm">
+<div class="flex flex-col">
+<span class="font-data-mono text-xs text-outline mb-1">2023-10-23 18:05:42</span>
+<div class="flex items-center gap-2">
+<span class="font-label-caps text-[10px] bg-surface-container px-1.5 py-0.5 rounded text-secondary border border-outline-variant">W23</span>
+<span class="font-body-sm font-semibold text-on-surface">Execution ID: TX-8489</span>
+</div>
+</div>
+<div class="px-2 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-label-caps">
+                        DELIVERED
+                    </div>
+</div>
+<div class="grid grid-cols-2 gap-gutter mb-md py-sm border-y border-outline-variant/30">
+<div>
+<span class="font-label-caps text-[10px] text-outline block uppercase mb-1">Volume</span>
+<span class="font-data-mono text-body-lg text-on-surface">912 units</span>
+</div>
+<div>
+<span class="font-label-caps text-[10px] text-outline block uppercase mb-1">Clusters</span>
+<span class="font-data-mono text-body-lg text-on-surface">8 active</span>
+</div>
+</div>
+<button class="w-full py-sm rounded-lg text-primary font-label-caps text-label-caps border border-primary/20 hover:bg-primary/5 transition-colors flex justify-center items-center gap-xs">
+                    View Details
+                    <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+<div class="mt-lg text-center">
+<button class="text-outline font-label-caps text-label-caps hover:text-primary transition-colors">
+                Load More Archives
+            </button>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-lg py-md md:hidden bg-surface-dim/90 backdrop-blur-xl border-t border-outline-variant shadow-[0_-4px_20px_rgba(0,192,144,0.1)] rounded-t-xl">
+<a class="text-outline dark:text-outline hover:text-primary-fixed-dim transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+</a>
+<a class="text-outline dark:text-outline hover:text-primary-fixed-dim transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="bubble_chart">bubble_chart</span>
+</a>
+<a class="text-outline dark:text-outline hover:text-primary-fixed-dim transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="manage_search">manage_search</span>
+</a>
+<a class="text-primary dark:text-primary scale-110 drop-shadow-[0_0_8px_rgba(68,222,172,0.4)] transition-transform active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="history" style="font-variation-settings: 'FILL' 1;">history</span>
+</a>
+</nav>
+<script>
+        // Micro-interaction for cards
+        document.querySelectorAll('.surface-glass').forEach(card => {
+            card.addEventListener('touchstart', () => {
+                card.style.transform = 'scale(0.98)';
+            });
+            card.addEventListener('touchend', () => {
+                card.style.transform = 'scale(1)';
+            });
+        });
+
+        // Simple mock for "Trigger Ingestion"
+        const triggerBtn = document.querySelector('header button');
+        triggerBtn.addEventListener('click', () => {
+            triggerBtn.textContent = "Processing...";
+            triggerBtn.classList.add('animate-pulse');
+            setTimeout(() => {
+                triggerBtn.textContent = "Run Complete";
+                triggerBtn.classList.remove('animate-pulse');
+                setTimeout(() => {
+                    triggerBtn.textContent = "Trigger Ingestion Run";
+                }, 2000);
+            }, 1500);
+        });
+    </script>
+</body></html>
