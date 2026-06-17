@@ -1,0 +1,99 @@
+/* Custom CSS Utilities for Impullse Dashboard */
+
+body {
+  background-color: #080b11;
+  color: #dde4de;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Glassmorphism Styles */
+.surface_glass {
+  background: rgba(255, 255, 255, 0.025);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-panel {
+  background: rgba(14, 21, 18, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(60, 74, 67, 0.4);
+}
+
+/* Glow & Atmospheric Effects */
+.glow-mint {
+  transition: all 0.3s ease;
+}
+
+.glow-mint:hover {
+  box-shadow: 0 0 25px rgba(0, 192, 144, 0.12);
+  border-color: rgba(0, 192, 144, 0.3);
+}
+
+.status-dot-pulse {
+  box-shadow: 0 0 8px rgba(0, 192, 144, 0.5);
+}
+
+/* Custom Scrollbars */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 192, 144, 0.15);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 192, 144, 0.3);
+}
+
+/* Modal Open Transitions */
+.modal-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-overlay.open .modal-card {
+  transform: scale(1);
+}
+
+/* Dynamic Page Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.tab-view {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+/* Material Symbols Outlined Custom Config */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Custom Animations */
+@keyframes rotate-spinner {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: rotate-spinner 2s linear infinite;
+}
+
+/* Mobile Layout Helpers */
+@media (max-width: 767px) {
+  body {
+    font-size: 14px;
+  }
+}

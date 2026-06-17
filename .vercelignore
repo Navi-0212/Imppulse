@@ -1,0 +1,25 @@
+# Ignore local virtual environments
+.venv/
+venv/
+env/
+
+# Ignore Python cache and tests
+__pycache__/
+.pytest_cache/
+tests/
+
+# Ignore backend source code
+src/
+mcp_servers/
+
+# Ignore logs and documentation
+logs/
+Docs/
+
+# Ignore other backend configuration files
+requirements.txt
+Procfile
+.git/
+.gitignore
+.env
+.env.*

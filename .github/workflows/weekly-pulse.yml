@@ -1,0 +1,71 @@
+name: Weekly Review Pulse Trigger
+
+on:
+  schedule:
+    # 10:00 AM IST (India Standard Time) is 4:30 AM UTC. Runs every Monday.
+    - cron: '30 4 * * 1'
+  workflow_dispatch:
+    inputs:
+      product:
+        description: 'Product name (e.g., groww)'
+        required: true
+        default: 'groww'
+        type: string
+      window_weeks:
+        description: 'Number of rolling window weeks of reviews to analyze'
+        required: true
+        default: '12'
+        type: string
+      dry_run:
+        description: 'Dry run (generate report but skip Google Docs/Gmail delivery)'
+        required: true
+        default: false
+        type: boolean
+      recipients:
+        description: 'Comma-separated recipient emails (leave empty to use backend default)'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  trigger-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Impullse Run
+        run: |
+          # Determine parameters based on trigger type
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            PRODUCT="${{ github.event.inputs.product }}"
+            WINDOW_WEEKS="${{ github.event.inputs.window_weeks }}"
+            DRY_RUN="${{ github.event.inputs.dry_run }}"
+            RECIPIENTS="${{ github.event.inputs.recipients }}"
+          else
+            # Scheduled run defaults
+            PRODUCT="groww"
+            WINDOW_WEEKS="12"
+            DRY_RUN="false"
+            RECIPIENTS=""
+          fi
+
+          # Construct the JSON payload using jq
+          if [ -z "$RECIPIENTS" ]; then
+            PAYLOAD=$(jq -n \
+              --arg prod "$PRODUCT" \
+              --argjson ww "$WINDOW_WEEKS" \
+              --argjson dr "$DRY_RUN" \
+              '{product: $prod, window_weeks: $ww, dry_run: $dr}')
+          else
+            PAYLOAD=$(jq -n \
+              --arg prod "$PRODUCT" \
+              --argjson ww "$WINDOW_WEEKS" \
+              --argjson dr "$DRY_RUN" \
+              --arg rec "$RECIPIENTS" \
+              '{product: $prod, window_weeks: $ww, dry_run: $dr, recipients: $rec}')
+          fi
+
+          echo "Triggering API run with payload: $PAYLOAD"
+
+          # Send POST request to Railway backend
+          curl -f -sS -X POST "https://imppulse-production.up.railway.app/api/run" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD"
