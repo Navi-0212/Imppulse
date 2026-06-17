@@ -25,3 +25,8 @@ logs/
 
 # VS Code settings
 .vscode/
+
+# Node modules
+node_modules/
+**/node_modules/
+
