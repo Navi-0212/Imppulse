@@ -54,7 +54,8 @@ state = PipelineState()
 # Pydantic schemas
 class RunPayload(BaseModel):
     product: str = Field(default="groww", description="Target product (e.g. groww)")
-    window_weeks: int = Field(default=12, description="Rolling historical window boundary in weeks")
+    start_date: Optional[str] = Field(default=None, description="Start date in YYYY-MM-DD format")
+    end_date: Optional[str] = Field(default=None, description="End date in YYYY-MM-DD format")
     dry_run: bool = Field(default=False, description="Run ingestion and analysis without Workspace delivery")
     recipients: Optional[str] = Field(default=None, description="Comma-separated custom recipient emails. Defaults to environment default.")
 
@@ -93,7 +94,8 @@ def execute_pipeline_task(payload: RunPayload):
         # Execute the Click command callback directly (bypassing Click's CLI arguments context)
         run.callback(
             product=payload.product,
-            window_weeks=payload.window_weeks,
+            start_date=payload.start_date,
+            end_date=payload.end_date,
             dry_run=payload.dry_run,
             recipients=recipients_val
         )
@@ -157,10 +159,11 @@ def trigger_run(payload: RunPayload, background_tasks: BackgroundTasks):
     
     return {
         "status": "accepted",
-        "message": f"Sentiment analysis run triggered for {payload.product.upper()} (window: {payload.window_weeks} weeks). Check status endpoint for updates.",
+        "message": f"Sentiment analysis run triggered for {payload.product.upper()} (range: {payload.start_date or 'default'} to {payload.end_date or 'default'}). Check status endpoint for updates.",
         "params": {
             "product": payload.product,
-            "window_weeks": payload.window_weeks,
+            "start_date": payload.start_date,
+            "end_date": payload.end_date,
             "dry_run": payload.dry_run
         }
     }

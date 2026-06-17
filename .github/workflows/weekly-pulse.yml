@@ -11,10 +11,15 @@ on:
         required: true
         default: 'groww'
         type: string
-      window_weeks:
-        description: 'Number of rolling window weeks of reviews to analyze'
-        required: true
-        default: '12'
+      start_date:
+        description: 'Start date in YYYY-MM-DD format (leave blank for start of previous week)'
+        required: false
+        default: ''
+        type: string
+      end_date:
+        description: 'End date in YYYY-MM-DD format (leave blank for end of previous week)'
+        required: false
+        default: ''
         type: string
       dry_run:
         description: 'Dry run (generate report but skip Google Docs/Gmail delivery)'
@@ -36,32 +41,33 @@ jobs:
           # Determine parameters based on trigger type
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             PRODUCT="${{ github.event.inputs.product }}"
-            WINDOW_WEEKS="${{ github.event.inputs.window_weeks }}"
+            START_DATE="${{ github.event.inputs.start_date }}"
+            END_DATE="${{ github.event.inputs.end_date }}"
             DRY_RUN="${{ github.event.inputs.dry_run }}"
             RECIPIENTS="${{ github.event.inputs.recipients }}"
           else
             # Scheduled run defaults
             PRODUCT="groww"
-            WINDOW_WEEKS="12"
+            START_DATE=""
+            END_DATE=""
             DRY_RUN="false"
             RECIPIENTS=""
           fi
 
           # Construct the JSON payload using jq
-          if [ -z "$RECIPIENTS" ]; then
-            PAYLOAD=$(jq -n \
-              --arg prod "$PRODUCT" \
-              --argjson ww "$WINDOW_WEEKS" \
-              --argjson dr "$DRY_RUN" \
-              '{product: $prod, window_weeks: $ww, dry_run: $dr}')
-          else
-            PAYLOAD=$(jq -n \
-              --arg prod "$PRODUCT" \
-              --argjson ww "$WINDOW_WEEKS" \
-              --argjson dr "$DRY_RUN" \
-              --arg rec "$RECIPIENTS" \
-              '{product: $prod, window_weeks: $ww, dry_run: $dr, recipients: $rec}')
-          fi
+          PAYLOAD=$(jq -n \
+            --arg prod "$PRODUCT" \
+            --arg sd "$START_DATE" \
+            --arg ed "$END_DATE" \
+            --argjson dr "$DRY_RUN" \
+            --arg rec "$RECIPIENTS" \
+            '{
+              product: $prod,
+              start_date: (if $sd == "" then null else $sd end),
+              end_date: (if $ed == "" then null else $ed end),
+              dry_run: $dr,
+              recipients: (if $rec == "" then null else $rec end)
+            }')
 
           echo "Triggering API run with payload: $PAYLOAD"
 

@@ -861,13 +861,15 @@ formRunPipeline.addEventListener("submit", async (e) => {
   modalRunError.style.display = "none";
   
   const product = document.getElementById("input-product").value.trim();
-  const windowWeeks = parseInt(document.getElementById("input-window").value);
+  const startDate = document.getElementById("input-start-date").value;
+  const endDate = document.getElementById("input-end-date").value;
   const dryRun = document.getElementById("input-dry-run").checked;
   const recipients = document.getElementById("input-recipients").value.trim();
   
   const payload = {
     product: product,
-    window_weeks: windowWeeks,
+    start_date: startDate || null,
+    end_date: endDate || null,
     dry_run: dryRun,
     recipients: recipients || null
   };
@@ -913,6 +915,36 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
+// Initialize Date Pickers to previous week (Monday to Sunday)
+function initDatePickerDefaults() {
+  const today = new Date();
+  const day = today.getDay(); // 0 is Sunday, 1 is Monday...
+  // Calculate days to subtract to get to last Monday
+  const diffToLastMonday = (day === 0 ? 6 : day - 1) + 7;
+  
+  const lastMonday = new Date(today);
+  lastMonday.setDate(today.getDate() - diffToLastMonday);
+  
+  const lastSunday = new Date(lastMonday);
+  lastSunday.setDate(lastMonday.getDate() + 6);
+  
+  const formatDate = (date) => {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+  
+  const inputStart = document.getElementById("input-start-date");
+  const inputEnd = document.getElementById("input-end-date");
+  
+  if (inputStart && inputEnd) {
+    inputStart.value = formatDate(lastMonday);
+    inputEnd.value = formatDate(lastSunday);
+  }
+}
+
 // Initial Loading Setup
+initDatePickerDefaults();
 refreshAllData();
 setInterval(checkServerStatus, 5000);

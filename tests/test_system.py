@@ -370,7 +370,8 @@ def test_workspace_delivery():
         
         result = runner.invoke(run, [
             '--product', 'groww',
-            '--window-weeks', '12',
+            '--start-date', '2026-06-08',
+            '--end-date', '2026-06-14',
             '--recipients', 'test@groww-analytics.internal'
         ])
         
@@ -418,7 +419,8 @@ def test_server_endpoints():
     with patch('src.server.execute_pipeline_task') as mock_execute:
         response = client.post("/api/run", json={
             "product": "groww",
-            "window_weeks": 8,
+            "start_date": "2026-06-08",
+            "end_date": "2026-06-14",
             "dry_run": True,
             "recipients": "test@groww.in"
         })
@@ -431,6 +433,7 @@ def test_execution_lock():
     from click.testing import CliRunner
     from src.cli import run, FileLock
     import os
+    from unittest.mock import patch
     
     lock_file = os.path.join("logs", "impullse.lock")
     if os.path.exists(lock_file):
@@ -444,20 +447,21 @@ def test_execution_lock():
     # 1. Acquire lock manually to mock another running process
     os.makedirs(os.path.dirname(lock_file), exist_ok=True)
     with open(lock_file, "w") as f:
-        f.write(str(os.getppid()))
+        f.write("999999")
         
-    try:
-        # 2. Run CLI command - should abort early due to file lock
-        result = runner.invoke(run, ['--dry-run'])
-        assert result.exit_code != 0
-        assert "Another pipeline execution is already running" in result.output
-    finally:
-        # 3. Clean up lock
-        if os.path.exists(lock_file):
-            try:
-                os.remove(lock_file)
-            except Exception:
-                pass
+    with patch('os.kill', return_value=None):
+        try:
+            # 2. Run CLI command - should abort early due to file lock
+            result = runner.invoke(run, ['--dry-run'])
+            assert result.exit_code != 0
+            assert "Another pipeline execution is already running" in result.output
+        finally:
+            # 3. Clean up lock
+            if os.path.exists(lock_file):
+                try:
+                    os.remove(lock_file)
+                except Exception:
+                    pass
 
 
 
