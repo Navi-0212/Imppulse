@@ -465,11 +465,17 @@
           <span class="text-[10px] text-outline">Target fintech application identifier (e.g. groww).</span>
         </div>
         
-        <div class="flex flex-col gap-xs">
-          <label for="input-window" class="font-label-caps text-[11px] text-outline uppercase tracking-wider">Rolling Window (Weeks)</label>
-          <input type="number" id="input-window" value="12" min="1" max="52" class="bg-white/5 border border-outline-variant/40 rounded-lg p-2.5 text-on-surface focus:outline-none focus:border-primary w-full text-sm" required>
-          <span class="text-[10px] text-outline">Review cutoff boundaries in weeks.</span>
+        <div class="grid grid-cols-2 gap-sm">
+          <div class="flex flex-col gap-xs">
+            <label for="input-start-date" class="font-label-caps text-[11px] text-outline uppercase tracking-wider">Start Date</label>
+            <input type="date" id="input-start-date" class="bg-white/5 border border-outline-variant/40 rounded-lg p-2.5 text-on-surface focus:outline-none focus:border-primary w-full text-sm" required>
+          </div>
+          <div class="flex flex-col gap-xs">
+            <label for="input-end-date" class="font-label-caps text-[11px] text-outline uppercase tracking-wider">End Date</label>
+            <input type="date" id="input-end-date" class="bg-white/5 border border-outline-variant/40 rounded-lg p-2.5 text-on-surface focus:outline-none focus:border-primary w-full text-sm" required>
+          </div>
         </div>
+        <span class="text-[10px] text-outline block -mt-1">Boundary filter dates for analysis. Defaults to previous calendar week.</span>
         
         <div class="flex items-center gap-sm pt-xs">
           <input type="checkbox" id="input-dry-run" class="rounded text-primary focus:ring-0 focus:ring-offset-0 bg-transparent border-outline-variant/40">
