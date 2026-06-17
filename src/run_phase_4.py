@@ -20,11 +20,14 @@ def main():
     mcp_url = os.environ.get("GOOGLE_MCP_SERVER_URL")
     recipients = os.environ.get("STAKEHOLDER_EMAILS", "stakeholders@groww-analytics.internal")
     
+    force = os.environ.get("FORCE_DELIVERY", "true").lower() == "true"
+    
     print(f"Product: {product.upper()}")
     print(f"Date Range: {start_date} to {end_date}")
     print(f"Google Doc ID: {doc_id}")
     print(f"Google MCP Server URL: {mcp_url}")
     print(f"Recipients: {recipients}")
+    print(f"Force Delivery: {force}")
     print("")
     
     if not doc_id:
@@ -41,7 +44,8 @@ def main():
             start_date=start_date,
             end_date=end_date,
             dry_run=False,
-            recipients=recipients
+            recipients=recipients,
+            force=force
         )
         print("\nPipeline execution completed successfully.")
     except Exception as e:

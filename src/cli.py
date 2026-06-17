@@ -115,7 +115,8 @@ def cli():
 @click.option("--end-date", default=None, help="End date in YYYY-MM-DD format (defaults to end of previous week)")
 @click.option("--dry-run", is_flag=True, help="Run ingestion and analytics without Workspace delivery")
 @click.option("--recipients", default="stakeholders@groww-analytics.internal", envvar="STAKEHOLDER_EMAILS", help="Comma-separated recipient emails")
-def run(product, start_date, end_date, dry_run, recipients):
+@click.option("--force", is_flag=True, help="Bypass email idempotency checks to force delivery")
+def run(product, start_date, end_date, dry_run, recipients, force=False):
     """Executes the weekly product review aggregation, clustering, AI summarization, GQV validation, and Workspace delivery."""
     click.echo(f"Starting Impullse weekly run for {product.upper()}...")
     
@@ -320,7 +321,7 @@ def run(product, start_date, end_date, dry_run, recipients):
             skipped_recipients = []
             for recipient in recipient_list:
                 # Task 5.1: Idempotency check before calling Gmail tool
-                if check_already_delivered(product, iso_week, recipient):
+                if not force and check_already_delivered(product, iso_week, recipient):
                     click.echo(f"Skipping teaser email for {recipient} (already delivered for week {iso_week}).")
                     skipped_recipients.append(recipient)
                     continue

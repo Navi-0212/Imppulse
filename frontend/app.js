@@ -864,6 +864,7 @@ formRunPipeline.addEventListener("submit", async (e) => {
   const startDate = document.getElementById("input-start-date").value;
   const endDate = document.getElementById("input-end-date").value;
   const dryRun = document.getElementById("input-dry-run").checked;
+  const force = document.getElementById("input-force").checked;
   const recipients = document.getElementById("input-recipients").value.trim();
   
   const payload = {
@@ -871,6 +872,7 @@ formRunPipeline.addEventListener("submit", async (e) => {
     start_date: startDate || null,
     end_date: endDate || null,
     dry_run: dryRun,
+    force: force,
     recipients: recipients || null
   };
   

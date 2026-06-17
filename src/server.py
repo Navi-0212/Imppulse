@@ -58,6 +58,7 @@ class RunPayload(BaseModel):
     end_date: Optional[str] = Field(default=None, description="End date in YYYY-MM-DD format")
     dry_run: bool = Field(default=False, description="Run ingestion and analysis without Workspace delivery")
     recipients: Optional[str] = Field(default=None, description="Comma-separated custom recipient emails. Defaults to environment default.")
+    force: bool = Field(default=False, description="Bypass email idempotency checks to force delivery")
 
 def get_token_usage() -> int:
     """Helper to read today's token usage from the token log."""
@@ -97,7 +98,8 @@ def execute_pipeline_task(payload: RunPayload):
             start_date=payload.start_date,
             end_date=payload.end_date,
             dry_run=payload.dry_run,
-            recipients=recipients_val
+            recipients=recipients_val,
+            force=payload.force
         )
         
         # Determine status from newly generated logs

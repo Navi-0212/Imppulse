@@ -483,6 +483,12 @@
         </div>
         <span class="text-[10px] text-outline block -mt-2">Runs NLP analytics and Grounded Validation without pushing to Google Workspace.</span>
         
+        <div class="flex items-center gap-sm pt-xs">
+          <input type="checkbox" id="input-force" class="rounded text-primary focus:ring-0 focus:ring-offset-0 bg-transparent border-outline-variant/40">
+          <label for="input-force" class="text-xs text-on-surface font-medium select-none">Bypass Idempotency (Force Email Delivery)</label>
+        </div>
+        <span class="text-[10px] text-outline block -mt-2">Bypasses duplicate email detection to draft Gmail teaser notifications on every run.</span>
+        
         <div class="flex flex-col gap-xs" id="recipients-group">
           <label for="input-recipients" class="font-label-caps text-[11px] text-outline uppercase tracking-wider">Stakeholder Email Recipients</label>
           <input type="text" id="input-recipients" placeholder="emails@company.com, leadership@company.com" class="bg-white/5 border border-outline-variant/40 rounded-lg p-2.5 text-on-surface focus:outline-none focus:border-primary w-full text-sm">
