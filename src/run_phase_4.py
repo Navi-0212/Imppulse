@@ -12,7 +12,8 @@ def main():
     print("==================================================")
     
     product = "groww"
-    window_weeks = 12
+    start_date = os.environ.get("START_DATE", None)
+    end_date = os.environ.get("END_DATE", None)
     
     # Read variables from environment
     doc_id = os.environ.get("GOOGLE_DOC_ID")
@@ -20,7 +21,7 @@ def main():
     recipients = os.environ.get("STAKEHOLDER_EMAILS", "stakeholders@groww-analytics.internal")
     
     print(f"Product: {product.upper()}")
-    print(f"Window: {window_weeks} weeks")
+    print(f"Date Range: {start_date} to {end_date}")
     print(f"Google Doc ID: {doc_id}")
     print(f"Google MCP Server URL: {mcp_url}")
     print(f"Recipients: {recipients}")
@@ -37,7 +38,8 @@ def main():
         # Trigger the click callback directly
         run.callback(
             product=product,
-            window_weeks=window_weeks,
+            start_date=start_date,
+            end_date=end_date,
             dry_run=False,
             recipients=recipients
         )

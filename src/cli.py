@@ -111,10 +111,11 @@ def cli():
 
 @cli.command()
 @click.option("--product", default="groww", help="Name of product to run (default: groww)")
-@click.option("--window-weeks", default=12, help="Number of rolling window weeks (default: 12)")
+@click.option("--start-date", default=None, help="Start date in YYYY-MM-DD format (defaults to start of previous week)")
+@click.option("--end-date", default=None, help="End date in YYYY-MM-DD format (defaults to end of previous week)")
 @click.option("--dry-run", is_flag=True, help="Run ingestion and analytics without Workspace delivery")
 @click.option("--recipients", default="stakeholders@groww-analytics.internal", envvar="STAKEHOLDER_EMAILS", help="Comma-separated recipient emails")
-def run(product, window_weeks, dry_run, recipients):
+def run(product, start_date, end_date, dry_run, recipients):
     """Executes the weekly product review aggregation, clustering, AI summarization, GQV validation, and Workspace delivery."""
     click.echo(f"Starting Impullse weekly run for {product.upper()}...")
     
@@ -126,11 +127,31 @@ def run(product, window_weeks, dry_run, recipients):
         raise click.ClickException(f"Run aborted: {str(e)}")
 
     
-    # Calculate ISO week
-    today = datetime.date.today()
-    year, week, _ = today.isocalendar()
-    iso_week = f"{year}-W{week:02d}"
-    click.echo(f"ISO Week Target: {iso_week}")
+    # Calculate previous calendar week defaults if not specified
+    if not start_date and not end_date:
+        today_date = datetime.date.today()
+        # Previous calendar week: Monday to Sunday
+        last_monday = today_date - datetime.timedelta(days=today_date.weekday() + 7)
+        last_sunday = last_monday + datetime.timedelta(days=6)
+        start_date = last_monday.strftime("%Y-%m-%d")
+        end_date = last_sunday.strftime("%Y-%m-%d")
+        click.echo(f"No date range specified. Defaulting to previous calendar week: {start_date} to {end_date}")
+    elif not start_date:
+        start_date = "1970-01-01"
+    elif not end_date:
+        end_date = datetime.date.today().strftime("%Y-%m-%d")
+        
+    # Calculate ISO week from start_date
+    try:
+        start_dt = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
+        year, week, _ = start_dt.isocalendar()
+        iso_week = f"{year}-W{week:02d}"
+    except Exception:
+        today_date = datetime.date.today()
+        year, week, _ = today_date.isocalendar()
+        iso_week = f"{year}-W{week:02d}"
+        
+    click.echo(f"ISO Week Target: {iso_week} (Date range: {start_date} to {end_date})")
     
     # Setup run log path
     runs_dir = os.path.join("logs", "runs")
@@ -143,7 +164,8 @@ def run(product, window_weeks, dry_run, recipients):
             "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "product": product,
             "iso_week": iso_week,
-            "window_weeks": window_weeks,
+            "start_date": start_date,
+            "end_date": end_date,
         },
         "stats": {},
         "delivery": {},
@@ -155,12 +177,12 @@ def run(product, window_weeks, dry_run, recipients):
         click.echo("\n--- Phase 1: Ingestion & PII Scrubbing ---")
         click.echo("Fetching iOS reviews from App Store...")
         ios_ingestor = AppStoreIngestor()
-        ios_reviews = ios_ingestor.fetch_reviews(window_weeks=window_weeks)
+        ios_reviews = ios_ingestor.fetch_reviews(start_date=start_date, end_date=end_date)
         click.echo(f"Fetched {len(ios_reviews)} reviews from iOS App Store.")
         
         click.echo("Fetching Android reviews from Google Play Store...")
         android_scraper = PlayStoreScraper()
-        android_reviews = android_scraper.scrape_reviews(window_weeks=window_weeks)
+        android_reviews = android_scraper.scrape_reviews(start_date=start_date, end_date=end_date)
         click.echo(f"Fetched {len(android_reviews)} reviews from Google Play Store.")
         
         all_reviews = ios_reviews + android_reviews

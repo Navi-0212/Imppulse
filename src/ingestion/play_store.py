@@ -62,7 +62,7 @@ class PlayStoreScraper:
         # Default fallback
         return now
 
-    def scrape_reviews(self, window_weeks: int = 12, max_scrolls: int = 20) -> List[Dict[str, Any]]:
+    def scrape_reviews(self, start_date: str = None, end_date: str = None, max_scrolls: int = 20) -> List[Dict[str, Any]]:
         """
         Launches Playwright headless browser to crawl reviews.
         If Playwright is unavailable or errors out, returns a set of high-fidelity mock reviews 
@@ -70,13 +70,40 @@ class PlayStoreScraper:
         """
         reviews = []
         now = datetime.datetime.now(datetime.timezone.utc)
-        cutoff_date = now - datetime.timedelta(weeks=window_weeks)
+        
+        # Calculate defaults if not provided
+        if not start_date and not end_date:
+            start_dt = now - datetime.timedelta(days=7)
+            end_dt = now
+        else:
+            default_start = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
+            default_end = now
+            
+            def parse_date(d_str, default):
+                if not d_str:
+                    return default
+                try:
+                    if "t" in d_str.lower():
+                        return datetime.datetime.fromisoformat(d_str.replace("Z", "+00:00")).astimezone(datetime.timezone.utc)
+                    else:
+                        dt = datetime.datetime.strptime(d_str, "%Y-%m-%d")
+                        return dt.replace(tzinfo=datetime.timezone.utc)
+                except Exception:
+                    return default
+            
+            start_dt = parse_date(start_date, default_start)
+            end_dt = parse_date(end_date, default_end)
+            
+            if start_date and "t" not in start_date.lower():
+                start_dt = start_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+            if end_date and "t" not in end_date.lower():
+                end_dt = end_dt.replace(hour=23, minute=59, second=59, microsecond=999999)
         
         try:
             from playwright.sync_api import sync_playwright
         except ImportError:
             logger.warning("Playwright not installed. Falling back to high-fidelity mock reviews.")
-            return self._generate_mock_reviews(cutoff_date)
+            return self._generate_mock_reviews(start_dt, end_dt)
 
         try:
             with sync_playwright() as p:
@@ -149,7 +176,7 @@ class PlayStoreScraper:
                     date_str = date_elem.text_content() if date_elem.count() > 0 else ""
                     date_val = self.parse_play_date(date_str) if date_str else now
                     
-                    if date_val < cutoff_date:
+                    if date_val < start_dt or date_val > end_dt:
                         continue
                         
                     # Text
@@ -172,11 +199,11 @@ class PlayStoreScraper:
                 browser.close()
         except Exception as e:
             logger.error(f"Error scraping Play Store: {str(e)}. Falling back to high-fidelity mock reviews.")
-            return self._generate_mock_reviews(cutoff_date)
+            return self._generate_mock_reviews(start_dt, end_dt)
             
         return reviews
 
-    def _generate_mock_reviews(self, cutoff_date: datetime.datetime) -> List[Dict[str, Any]]:
+    def _generate_mock_reviews(self, start_dt: datetime.datetime, end_dt: datetime.datetime) -> List[Dict[str, Any]]:
         """
         Generates structured, realistic mock reviews for Groww app to support local testing and CI/CD validation.
         """
@@ -203,7 +230,7 @@ class PlayStoreScraper:
         for idx, (rating, text) in enumerate(comments):
             days_ago = idx * 2
             review_date = now - datetime.timedelta(days=days_ago)
-            if review_date < cutoff_date:
+            if review_date < start_dt or review_date > end_dt:
                 continue
                 
             mock_reviews.append({
